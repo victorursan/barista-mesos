@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Vendor: org.scaldi
+Implementation-Title: scaldi
+Implementation-Version: 0.4
+Implementation-Vendor-Id: org.scaldi
+Specification-Vendor: org.scaldi
+Specification-Title: scaldi
+Specification-Version: 0.4
+
