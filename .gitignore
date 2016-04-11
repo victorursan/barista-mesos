@@ -42,6 +42,7 @@ Temporary Items
 .lib/
 dist/*
 project/plugins/project/
+activator.properties
 
 # Scala-IDE specific
 .scala_dependencies
