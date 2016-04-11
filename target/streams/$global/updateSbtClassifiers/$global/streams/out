@@ -1722,9 +1722,9 @@
 [debug] 	[NOT REQUIRED] org.scala-sbt#test-interface;1.0!test-interface.jar
 [debug] 	[NOT REQUIRED] org.scala-sbt#apply-macro;0.13.9!apply-macro.jar
 [debug] 	[NOT REQUIRED] org.jboss.interceptor#jboss-interceptor-api;1.1!jboss-interceptor-api.jar
-[debug] :: resolution report :: resolve 579ms :: artifacts dl 23ms
-[debug] 	report for com.victorursan#barista$sbt_2.11;0.0.1 default produced in /Users/victor/Learning/MasterSlave/Barista/target/resolution-cache/reports/com.victorursan-barista$sbt_2.11-default.xml
-[debug] 	resolve done (579ms resolve - 23ms download)
+[debug] :: resolution report :: resolve 1679ms :: artifacts dl 76ms
+[debug] 	report for com.victorursan#barista$sbt_2.11;0.0.1 default produced in /Users/victor/Learning/Barista/target/resolution-cache/reports/com.victorursan-barista$sbt_2.11-default.xml
+[debug] 	resolve done (1679ms resolve - 76ms download)
 [debug] Using inline dependencies specified in Scala.
 [debug] :: resolving dependencies :: com.victorursan#barista$sources_2.11;0.0.1
 [debug] 	confs: [default]
@@ -2526,6 +2526,6 @@
 [debug] 	[NOT REQUIRED] org.eclipse.sisu#org.eclipse.sisu.plexus;0.3.0!org.eclipse.sisu.plexus.jar(src)
 [debug] 	[NOT REQUIRED] org.eclipse.sisu#org.eclipse.sisu.inject;0.3.0!org.eclipse.sisu.inject.jar(src)
 [debug] 	[NOT REQUIRED] org.codehaus.plexus#plexus-classworlds;2.5.2!plexus-classworlds.jar(src)
-[debug] :: resolution report :: resolve 136ms :: artifacts dl 17ms
-[debug] 	report for com.victorursan#barista$sources_2.11;0.0.1 default produced in /Users/victor/Learning/MasterSlave/Barista/target/resolution-cache/reports/com.victorursan-barista$sources_2.11-default.xml
-[debug] 	resolve done (136ms resolve - 17ms download)
+[debug] :: resolution report :: resolve 427ms :: artifacts dl 59ms
+[debug] 	report for com.victorursan#barista$sources_2.11;0.0.1 default produced in /Users/victor/Learning/Barista/target/resolution-cache/reports/com.victorursan-barista$sources_2.11-default.xml
+[debug] 	resolve done (427ms resolve - 59ms download)

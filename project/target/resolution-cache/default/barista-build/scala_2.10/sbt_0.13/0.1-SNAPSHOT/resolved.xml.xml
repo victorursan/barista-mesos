@@ -4,7 +4,7 @@
 		module="barista-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20160408173103"
+		publication="20160411111314"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>

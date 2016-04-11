@@ -4,7 +4,7 @@
 		module="barista$sbt_2.11"
 		revision="0.0.1"
 		status="integration"
-		publication="20160408183257"
+		publication="20160411111341"
 	/>
 	<configurations>
 		<conf name="default" visibility="public"/>

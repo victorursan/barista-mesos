@@ -7,7 +7,7 @@
 		revision="0.0.1"
 		conf="runtime"
 		confs="compile, runtime, test, provided, optional, it, compile-internal, runtime-internal, test-internal, it-internal, plugin, sources, docs, pom, scala-tool"
-		date="20160408173115"/>
+		date="20160411111340"/>
 	<dependencies>
 		<module organisation="mesosphere" name="mesos-utils">
 			<revision name="0.0.6" status="release" pubdate="20131114200210" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="17">
