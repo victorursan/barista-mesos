@@ -1,5 +1,5 @@
 #Barista-mesos-microservices
-=============================
+
 ## Setup
 * Generate de .jar file
 `sbt assembly`
