@@ -44,9 +44,7 @@ ScalariformKeys.preferences := ScalariformKeys.preferences.value
   .setPreference(DoubleIndentClassDeclaration, true)
 
 
-initialCommands := """|import scalaz._
-                      |import Scalaz._
-                      |import akka.actor._
+initialCommands := """|import akka.actor._
                       |import akka.pattern._
                       |import akka.util._
                       |import scala.concurrent._

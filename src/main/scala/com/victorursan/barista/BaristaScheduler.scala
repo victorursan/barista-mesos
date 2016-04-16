@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.barista
 
 import java.util
 
@@ -8,7 +8,7 @@ import org.apache.mesos.{ Scheduler, SchedulerDriver }
 import scala.collection.JavaConverters._
 import scala.concurrent.Promise
 
-class ScalaScheduler extends Scheduler {
+class BaristaScheduler extends Scheduler {
   private val promise: Promise[List[Offer]] = Promise[List[Offer]]
   val future = promise.future
 
