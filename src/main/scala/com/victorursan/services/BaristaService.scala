@@ -1,9 +1,10 @@
-package com.victorursan
+package com.victorursan.services
 
 import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.server.Directives._
-import com.victorursan.barista.{ BaristaScheduler, BaristaSchedulerDriver }
+import com.victorursan.barista.{BaristaScheduler, BaristaSchedulerDriver}
+import com.victorursan.utils.JsonTransformer
 import spray.json.JsArray
 
 import scala.concurrent.Await

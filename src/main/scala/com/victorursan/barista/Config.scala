@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.barista
 
 import com.typesafe.config.ConfigFactory
 

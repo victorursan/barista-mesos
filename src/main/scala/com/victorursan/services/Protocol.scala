@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.services
 
 import spray.json.DefaultJsonProtocol
 

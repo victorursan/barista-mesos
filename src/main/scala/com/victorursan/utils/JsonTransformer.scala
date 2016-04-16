@@ -1,7 +1,7 @@
-package com.victorursan
+package com.victorursan.utils
 
 import org.apache.mesos.Protos._
-import spray.json.{ JsArray, JsNumber, JsObject, JsString }
+import spray.json.{JsArray, JsNumber, JsObject, JsString}
 
 import scala.collection.JavaConverters._
 
