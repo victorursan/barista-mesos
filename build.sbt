@@ -17,6 +17,7 @@ libraryDependencies ++= {
   val apacheMesosV     = "0.28.0"
   val scalaMockV       = "3.2.2"
   val scalazScalaTestV = "0.2.3"
+  val slf4jLoggerV     = "1.7.21"
   Seq(
 
     "com.typesafe.akka"       %% "akka-stream"                          % akkaStreamV,
@@ -27,7 +28,8 @@ libraryDependencies ++= {
     "mesosphere"              %% "mesos-utils"                          % apacheMesosV,
     "org.scala-lang"          % "scala-library"                         % scalaV,
     "org.scala-lang"          % "scala-reflect"                         % scalaV,
-    "org.scala-lang"          % "scala-compiler"                        % scalaV
+    "org.scala-lang"          % "scala-compiler"                        % scalaV,
+    "org.slf4j"               % "slf4j-api"                             % slf4jLoggerV
   )
 }
 

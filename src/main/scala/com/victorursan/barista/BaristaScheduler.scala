@@ -4,11 +4,13 @@ import java.util
 
 import org.apache.mesos.Protos._
 import org.apache.mesos.{ Scheduler, SchedulerDriver }
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Promise
 
 class BaristaScheduler extends Scheduler {
+  private[this] val log = LoggerFactory.getLogger(getClass)
   private val promise: Promise[List[Offer]] = Promise[List[Offer]]
   val future = promise.future
 
@@ -23,13 +25,13 @@ class BaristaScheduler extends Scheduler {
   def frameworkMessage(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, data: Array[Byte]) {}
 
   def statusUpdate(driver: SchedulerDriver, status: TaskStatus) {
-    println(s"received status update $status")
+    log.info(s"received status update $status")
   }
 
   def offerRescinded(driver: SchedulerDriver, offerId: OfferID) {}
 
   def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]) {
-    println(s"offers $offers")
+    log.info(s"offers $offers")
     promise.trySuccess(offers.asScala.toList)
   }
 
