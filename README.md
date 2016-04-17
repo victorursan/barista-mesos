@@ -1,10 +1,23 @@
 #Barista-mesos-microservices
 
-## Setup
-* Generate de .jar file
+## Setup (short way)
+Make sure on OSX you have instaled `ssh-copy-id`
+
+* Simply run the following command.
+
+`./deploy.sh -u vagrant 10.1.1.11 10.1.1.12 10.1.1.13` (where -u is the flag for the root user on the mesos-master nodes, in this case is vagrant, and the ip's at the end are the addresses.)
+
+This will do the following:
+  - create a ssh key if you don't have one
+  - connect via ssh with the nodes (you will be asked for the nodes root password)
+  - create the .jar file from the project
+  - copy and run the jar on every master node
+
+## Setup (long way)
+* Generate de .jar file.
 `sbt assembly`
-* Copy on every master node the .jar file found in ./target/scala-2.11/barista_snapshot.jar
-* Run the jar file on the lead node
+* Copy on every master node the .jar file found in ./target/scala-2.11/barista_snapshot.jar.
+* Run the jar file on the lead node.
 `java -jar barista_snapshot.jar`
-* To test the framework, on your host machine, go on 
-`http://10.1.1.11:9000/barista` (replace the ip with your lead ip, you should get the slave nodes resources)
+* To test the framework, on your host machine, access 
+`http://10.1.1.11:9000/barista` (replace the ip with your lead ip, you should get the slave nodes resources).
