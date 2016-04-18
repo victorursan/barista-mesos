@@ -1,23 +1,25 @@
-#Barista-mesos-microservices
+# Barista Mesos Microservices [![Build Status](https://magnum.travis-ci.com/victorursan/barista-mesos-microservices.svg?&branch=master)](https://magnum.travis-ci.com/victorursan/barista-mesos-microservices)
 
-## Setup (short way)
-Make sure on OSX you have instaled `ssh-copy-id`
+## Setup
+Create a Mesos Cluster. You can find an easy setup [here](https://github.com/victorursan/mesos-cluster-ansible)
+Install ssh copy id:
+```
+brew install ssh-copy-id
+```
 
-* Simply run the following command.
+## Deployment
+Run the `deploy.sh` script:
 
-`./deploy.sh -u vagrant 10.1.1.11 10.1.1.12 10.1.1.13` (where -u is the flag for the root user on the mesos-master nodes, in this case is vagrant, and the ip's at the end are the addresses.)
+```
+./deploy.sh -u vagrant 10.1.1.11 10.1.1.12 10.1.1.13
+```
 
-This will do the following:
-  - create a ssh key if you don't have one
-  - connect via ssh with the nodes (you will be asked for the nodes root password)
-  - create the .jar file from the project
-  - copy and run the jar on every master node
+where:
+`-u vagrant` sets the `root` user to `vagrant` for Mesos Master nodes.
+`10.1.1.11, 10.1.1.12, 10.1.1.13` are the Mesos Master’s IPs.
 
-## Setup (long way)
-* Generate de .jar file.
-`sbt assembly`
-* Copy on every master node the .jar file found in ./target/scala-2.11/barista_snapshot.jar.
-* Run the jar file on the lead node.
-`java -jar barista_snapshot.jar`
-* To test the framework, on your host machine, access 
-`http://10.1.1.11:9000/barista` (replace the ip with your lead ip, you should get the slave nodes resources).
+The `deploy.sh` script will:
+  - creates a ssh key if you don't have one
+  - connects via ssh with the nodes (you will be asked for the nodes root password)
+  - builds project, the .jar file is in `./target/scala-2.11`
+  - copies and runs the jar on every master node
