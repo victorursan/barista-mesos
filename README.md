@@ -1,6 +1,10 @@
-#Barista-mesos-microservices
+# Barista-mesos-microservices
 
-## Setup (short way)
+## Setup
+Create a mesos cluster. You can find an easy build [here](https://github.com/victorursan/mesos-cluster-ansible)
+
+## Deployment
+### Deploy using the included script
 Make sure on OSX you have instaled `ssh-copy-id`
 
 * Simply run the following command.
@@ -13,7 +17,7 @@ This will do the following:
   - create the .jar file from the project
   - copy and run the jar on every master node
 
-## Setup (long way)
+### Deploy manualy
 * Generate de .jar file.
 `sbt assembly`
 * Copy on every master node the .jar file found in ./target/scala-2.11/barista_snapshot.jar.
