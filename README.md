@@ -23,5 +23,5 @@ where:
 The `deploy.sh` script will:
   - creates a ssh key if you don't have one
   - connects via ssh with the nodes (you will be asked for the nodes root password)
-  - builds project, the .jar file is in `./target/scala-2.11`
+  - builds project, the .jar file is in `./target/scala-2.xx/barista_snapshot.jar`
   - copies and runs the jar on every master node
