@@ -1,5 +1,4 @@
-# Barista Mesos Microservices [![Build Status](https://magnum.travis-ci.com/victorursan/barista-mesos-microservices.svg?&branch=master)](https://magnum.travis-ci.com/victorursan/barista-mesos-microservices)
-
+# Barista Mesos Microservices [![Build Status](https://travis-ci.org/victorursan/barista-mesos-microservices.svg?branch=master)](https://travis-ci.org/victorursan/barista-mesos-microservices)
 ## Setup
 Create a Mesos Cluster. You can find an easy setup [here](https://github.com/victorursan/mesos-cluster-ansible).
 
