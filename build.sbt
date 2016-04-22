@@ -34,11 +34,9 @@ libraryDependencies ++= {
 }
 
 
-lazy val root = project.in(file(".")).configs(IntegrationTest)
-Defaults.itSettings
+lazy val root = project.in(file("."))
 scalariformSettings
 Revolver.settings
-enablePlugins(JavaAppPackaging)
 
 ScalariformKeys.preferences := ScalariformKeys.preferences.value
   .setPreference(AlignSingleLineCaseStatements, true)

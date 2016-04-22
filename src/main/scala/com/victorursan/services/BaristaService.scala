@@ -10,6 +10,7 @@ import spray.json.JsArray
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Success
 
 trait BaristaService extends BaseService {
   protected val serviceName = "BaristaService"
@@ -25,9 +26,10 @@ trait BaristaService extends BaseService {
   } ~ path("barista") {
     get {
       log.info("/barista executed")
-      val offers = Await.result(scheduler.future, 100 second)
-      val jsonOffer: JsArray = JsonTransformer getJsonArray offers
-      complete(jsonOffer.prettyPrint)
+      onComplete(scheduler.future) {
+        case Success(listOffer) => complete(JsonTransformer.getJsonArray(listOffer).prettyPrint)
+        case _                  => complete("Something went wrong")
+      }
     }
   } ~ path("barista" / "stop") {
     log.info("/barista/stop executed")
