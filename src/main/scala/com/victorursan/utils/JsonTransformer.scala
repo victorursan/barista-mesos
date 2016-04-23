@@ -6,10 +6,7 @@ import spray.json.{ JsArray, JsNumber, JsObject, JsString }
 import scala.collection.JavaConverters._
 
 object JsonTransformer {
-  def getJsonArray(offers: List[Offer]): JsArray = {
-    val newOffers: Vector[JsObject] = offers.map(convertOffer).toVector
-    JsArray(newOffers)
-  }
+  def getJsonArray(offers: List[Offer]): JsArray = JsArray(offers.map(convertOffer).toVector)
 
   private def convertOffer(offer: Offer) = JsObject(
     "node_id" -> JsString(offer.getId.getValue),

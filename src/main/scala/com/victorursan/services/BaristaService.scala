@@ -4,7 +4,8 @@ import java.lang.management.ManagementFactory
 
 import com.victorursan.barista.{ BaristaScheduler, BaristaSchedulerDriver }
 import com.victorursan.utils.{ DockerEntity, JsonTransformer }
-
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Success
@@ -14,7 +15,7 @@ trait BaristaService extends BaseService {
   protected val scheduler = new BaristaScheduler
   protected val mesosMaster = System.getenv("ZK")
   protected val runner = BaristaSchedulerDriver.newDriver(scheduler, mesosMaster)
-  runner.start()
+
   protected val routes = pathPrefix("status") {
     get {
       log.info("/status executed")
@@ -23,6 +24,7 @@ trait BaristaService extends BaseService {
   } ~ path("barista") {
     get {
       log.info("/barista executed")
+      runner.reviveOffers()
       onComplete(scheduler.future) {
         case Success(listOffer) => complete(JsonTransformer getJsonArray listOffer prettyPrint)
         case _                  => complete("Something went wrong")
@@ -36,6 +38,8 @@ trait BaristaService extends BaseService {
     log.info("/api/app executed")
     post {
       entity(as[DockerEntity]) { dockerImg =>
+        scheduler.addTask(dockerImg)
+        runner.run()
         complete(s"OK $dockerImg")
       }
     }
