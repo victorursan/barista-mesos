@@ -1,5 +1,7 @@
 package com.victorursan.barista
 
+import akka.actor.ActorSystem
+import akka.event.{ Logging, LoggingAdapter }
 import org.apache.mesos.Protos.FrameworkInfo
 import org.apache.mesos.{ MesosSchedulerDriver, SchedulerDriver }
 import org.slf4j.LoggerFactory
@@ -12,7 +14,8 @@ import scala.sys.SystemProperties
  * Created by victor on 4/16/16.
  */
 object BaristaSchedulerDriver {
-  private[this] val log = LoggerFactory.getLogger(getClass)
+  protected def system: ActorSystem = ActorSystem()
+  protected def log: LoggingAdapter = Logging(system, "BaristaSchedulerDriver")
 
   def newDriver(newScheduler: BaristaScheduler, mesosMaster: String): SchedulerDriver = {
 
