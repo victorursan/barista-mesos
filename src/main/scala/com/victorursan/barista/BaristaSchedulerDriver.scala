@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.event.{ Logging, LoggingAdapter }
 import org.apache.mesos.Protos.FrameworkInfo
 import org.apache.mesos.{ MesosSchedulerDriver, SchedulerDriver }
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.language.postfixOps

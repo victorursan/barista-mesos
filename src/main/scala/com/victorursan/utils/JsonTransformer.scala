@@ -3,8 +3,6 @@ package com.victorursan.utils
 import org.apache.mesos.Protos._
 import spray.json.{ JsArray, JsNumber, JsObject, JsString, JsValue }
 
-import scala.collection.JavaConverters._
-
 object JsonTransformer {
   def getJsonArray(offers: List[Offer]): JsArray = JsArray(offers.map(convertOffer).toVector)
 
