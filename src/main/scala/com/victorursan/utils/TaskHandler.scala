@@ -19,6 +19,7 @@ object TaskHandler {
   private def createDockerInfo(image: String): DockerInfo =
     DockerInfo.newBuilder()
       .setImage(image)
+      .setForcePullImage(true)
       .setNetwork(ContainerInfo.DockerInfo.Network.HOST)
       .build()
 

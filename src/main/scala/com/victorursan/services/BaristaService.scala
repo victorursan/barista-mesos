@@ -3,8 +3,7 @@ package com.victorursan.services
 import java.lang.management.ManagementFactory
 
 import com.victorursan.barista.{ BaristaScheduler, BaristaSchedulerDriver }
-import com.victorursan.utils.{ DockerEntity, JsonTransformer, TaskHandler }
-import org.apache.mesos.Protos._
+import com.victorursan.utils.{ BaristaSchedulerHelper, DockerEntity, JsonTransformer, TaskHandler }
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,16 +37,15 @@ trait BaristaService extends BaseService {
   } ~ path("api" / "app") {
     log.info("/api/app executed")
     post {
-      entity(as[DockerEntity]) { dockerImg =>
+      entity(as[DockerEntity]) { dockerEntity =>
         scheduler.future.onComplete {
           case Success(offers) =>
-            for (offer: Offer <- offers) {
-              val task = TaskHandler.createTaskWith(offer, dockerImg)
-              driver.launchTasks(List(offer.getId).asJavaCollection, List(task).asJavaCollection)
-            }
+            val offer = BaristaSchedulerHelper.bestOfferForEntity(offers, dockerEntity)
+            val task = TaskHandler.createTaskWith(offer, dockerEntity)
+            driver.launchTasks(List(offer.getId).asJavaCollection, List(task).asJavaCollection)
           case _ => log.error("no offers")
         }
-        complete(s"OK: $dockerImg")
+        complete(s"DockerEntity: $dockerEntity")
       }
     }
   }

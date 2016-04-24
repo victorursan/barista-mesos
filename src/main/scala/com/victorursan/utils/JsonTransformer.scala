@@ -11,17 +11,8 @@ object JsonTransformer {
   private def convertOffer(offer: Offer): JsValue = JsObject(
     "node_id" -> JsString(offer.getId.getValue),
     "node_ip" -> JsString(offer.getHostname),
-    "cpus" -> JsNumber(getResource(offer, "cpus")),
-    "memory" -> JsNumber(getResource(offer, "mem")),
-    "disk" -> JsNumber(getResource(offer, "disk")))
-
-  private def getResource(offer: Offer, name: String): Double = {
-    val resource = offer.getResourcesList.asScala.find(_.getName == "cpus")
-    if (resource.isDefined) {
-      resource.get.getScalar.getValue
-    } else {
-      0
-    }
-  }
+    "cpus" -> JsNumber(OfferHandler.getResource(offer, "cpus")),
+    "memory" -> JsNumber(OfferHandler.getResource(offer, "mem")),
+    "disk" -> JsNumber(OfferHandler.getResource(offer, "disk")))
 
 }
