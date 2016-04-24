@@ -2,40 +2,64 @@ package com.victorursan.barista
 
 import java.util
 
+import akka.actor.ActorSystem
+import akka.event.{ Logging, LoggingAdapter }
 import org.apache.mesos.Protos._
 import org.apache.mesos.{ Scheduler, SchedulerDriver }
-import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Promise
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class BaristaScheduler extends Scheduler {
-  private[this] val log = LoggerFactory.getLogger(getClass)
-  private val promise: Promise[List[Offer]] = Promise[List[Offer]]
-  val future = promise.future
+  protected def system: ActorSystem = ActorSystem()
 
-  def error(driver: SchedulerDriver, message: String) {}
+  protected def log: LoggingAdapter = Logging(system, "BaristaScheduler")
 
-  def executorLost(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, status: Int) {}
+  var future: Future[List[Offer]] = Future {
+    List()
+  }(global)
 
-  def slaveLost(driver: SchedulerDriver, slaveId: SlaveID) {}
+  def error(driver: SchedulerDriver, message: String): Unit = {
+    log.info(s"error $message")
+  }
 
-  def disconnected(driver: SchedulerDriver) {}
+  def executorLost(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, status: Int): Unit = {
+    log.info(s"executorLost")
+  }
 
-  def frameworkMessage(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, data: Array[Byte]) {}
+  def slaveLost(driver: SchedulerDriver, slaveId: SlaveID): Unit = {
+    log.info(s"slaveLost")
+  }
+
+  def disconnected(driver: SchedulerDriver): Unit = {
+    log.info(s"disconnected")
+  }
+
+  def frameworkMessage(driver: SchedulerDriver, executorId: ExecutorID, slaveId: SlaveID, data: Array[Byte]): Unit = {
+    log.info(s"frameworkMessage")
+  }
 
   def statusUpdate(driver: SchedulerDriver, status: TaskStatus) {
-    log.info(s"received status update $status")
+    log.info(s"statusUpdate \n $status")
   }
 
-  def offerRescinded(driver: SchedulerDriver, offerId: OfferID) {}
-
-  def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]) {
-    log.info(s"offers $offers")
-    promise.trySuccess(offers.asScala.toList)
+  def offerRescinded(driver: SchedulerDriver, offerId: OfferID): Unit = {
+    log.info(s"offerRescinded")
   }
 
-  def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo) {}
+  def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]): Unit = {
+    log.info(s"resourceOffers $offers")
+    future = Future {
+      offers.asScala.toList
+    }
+  }
 
-  def registered(driver: SchedulerDriver, frameworkId: FrameworkID, masterInfo: MasterInfo) {}
+  def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo): Unit = {
+    log.info(s"re-registered")
+  }
+
+  def registered(driver: SchedulerDriver, frameworkId: FrameworkID, masterInfo: MasterInfo): Unit = {
+    log.info(s"registered")
+  }
 }
