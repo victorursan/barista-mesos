@@ -1,8 +1,10 @@
 # Barista Mesos Microservices [![Build Status](https://travis-ci.org/victorursan/barista-mesos-microservices.svg?branch=master)](https://travis-ci.org/victorursan/barista-mesos-microservices)
 ## Setup
-Create a Mesos Cluster. You can find an easy setup [here](https://github.com/victorursan/mesos-cluster-ansible).
+Create a Mesos Cluster, with Java 8 on the master nodes and docker installed and configured on the slave nodes.
 
-Install ssh copy id:
+You can find an easy setup [here](https://github.com/victorursan/mesos-cluster-ansible).
+
+Install ssh-copy-id (on OSX ):
 ```
 brew install ssh-copy-id
 ```
