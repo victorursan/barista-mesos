@@ -1,6 +1,6 @@
 package com.victorursan.utils
 
-import org.apache.mesos.Protos._
+import org.apache.mesos.Protos.Offer
 import spray.json.{ JsArray, JsNumber, JsObject, JsString, JsValue }
 
 object JsonTransformer {

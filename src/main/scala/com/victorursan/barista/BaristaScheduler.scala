@@ -13,12 +13,11 @@ import scala.concurrent.Future
 
 class BaristaScheduler extends Scheduler {
   protected def system: ActorSystem = ActorSystem()
-
   protected def log: LoggingAdapter = Logging(system, "BaristaScheduler")
 
-  var future: Future[List[Offer]] = Future {
+  var offers: Future[List[Offer]] = Future {
     List()
-  }(global)
+  }
 
   def error(driver: SchedulerDriver, message: String): Unit = {
     log.info(s"error $message")
@@ -50,9 +49,7 @@ class BaristaScheduler extends Scheduler {
 
   def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]): Unit = {
     log.info(s"resourceOffers $offers")
-    future = Future {
-      offers.asScala.toList
-    }
+    this.offers = Future { offers.asScala.toList }
   }
 
   def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo): Unit = {
