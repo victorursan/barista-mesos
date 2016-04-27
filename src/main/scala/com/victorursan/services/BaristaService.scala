@@ -3,12 +3,11 @@ package com.victorursan.services
 import java.lang.management.ManagementFactory
 
 import com.victorursan.barista.BaristaController
-import com.victorursan.utils.{DockerEntity, JsonTransformer}
+import com.victorursan.utils.{ DockerEntity, JsonTransformer }
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 trait BaristaService extends BaseService {
   protected val serviceName = "BaristaService"
@@ -34,19 +33,13 @@ trait BaristaService extends BaseService {
       path("offers") {
         get {
           log.info("[GET] /api/offers executed")
-          onComplete(baristaController.offers()) {
-            case Success(listOffer) => complete(JsonTransformer getJsonArray listOffer prettyPrint)
-            case Failure(error)     => complete(error)
-          }
+          complete(JsonTransformer getJsonArray baristaController.offers() prettyPrint)
         }
       } ~ path("apps") {
         post {
           log.info("[POST] /api/apps executed")
           entity(as[DockerEntity]) { dockerEntity =>
-            onComplete(baristaController.launchDockerEntity(dockerEntity)) {
-              case Success(result) => complete(result)
-              case Failure(error)  => complete(error)
-            }
+            complete(baristaController.launchDockerEntity(dockerEntity).name())
           }
         }
       }

@@ -10,9 +10,10 @@ mainClass in assembly := some("com.victorursan.Main")
 assemblyJarName := "barista_snapshot.jar"
 
 libraryDependencies ++= {
-  val scalaV           = "2.11.8"
-  val akkaStreamV      = "2.4.4"
-  val apacheMesosV     = "0.28.0"
+  val scalaV        = "2.11.8"
+  val akkaStreamV   = "2.4.4"
+  val apacheMesosV  = "0.28.0"
+  val rxScalaV      = "0.26.1"
   Seq(
     "com.typesafe.akka"       %% "akka-stream"                          % akkaStreamV,
     "com.typesafe.akka"       %% "akka-http-core"                       % akkaStreamV,
@@ -21,7 +22,8 @@ libraryDependencies ++= {
     "org.apache.mesos"        % "mesos"                                 % apacheMesosV,
     "org.scala-lang"          % "scala-library"                         % scalaV,
     "org.scala-lang"          % "scala-reflect"                         % scalaV,
-    "org.scala-lang"          % "scala-compiler"                        % scalaV
+    "org.scala-lang"          % "scala-compiler"                        % scalaV,
+    "io.reactivex"            % "rxscala_2.11"                          % rxScalaV
   )
 }
 

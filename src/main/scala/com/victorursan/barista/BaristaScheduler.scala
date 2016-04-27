@@ -6,18 +6,17 @@ import akka.actor.ActorSystem
 import akka.event.{ Logging, LoggingAdapter }
 import org.apache.mesos.Protos._
 import org.apache.mesos.{ Scheduler, SchedulerDriver }
+import rx.lang.scala.{ Subject, Subscriber }
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class BaristaScheduler extends Scheduler {
   protected def system: ActorSystem = ActorSystem()
   protected def log: LoggingAdapter = Logging(system, "BaristaScheduler")
 
-  var offers: Future[List[Offer]] = Future {
-    List()
-  }
+  private val offersSubject = Subject[List[Offer]]()
+
+  def subscribe(subscriber: Subscriber[List[Offer]]): Unit = offersSubject.subscribe(subscriber)
 
   def error(driver: SchedulerDriver, message: String): Unit = {
     log.info(s"error $message")
@@ -49,7 +48,7 @@ class BaristaScheduler extends Scheduler {
 
   def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]): Unit = {
     log.info(s"resourceOffers $offers")
-    this.offers = Future { offers.asScala.toList }
+    offersSubject.onNext(offers.asScala.toList)
   }
 
   def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo): Unit = {
