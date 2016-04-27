@@ -27,3 +27,31 @@ The `deploy.sh` script will:
   - connects via ssh with the nodes (you will be asked for the nodes root password)
   - builds project, the .jar file is in `./target/scala-2.xx/barista_snapshot.jar`
   - copies and runs the jar on every master node
+
+## Features
+### Supported
+- getting cluster availalbe resoruces
+```
+[GET] /api/offers
+```
+- deploying a container
+```
+[POST] /api/apps
+```
+JSON format to describe the container:
+```
+{
+"name" : "hello-world",
+"image": "victorursan/akka-http-hello",
+"resource" : {
+    "cpu": 0.3,
+    "mem": 128.0
+    }
+}
+```
+- stop the framework
+```
+[GET] /stop
+```
+### Comming Soon
+ - Container Replace/Scale (Update)
