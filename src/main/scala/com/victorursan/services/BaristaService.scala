@@ -7,7 +7,6 @@ import com.victorursan.utils.{ DockerEntity, JsonTransformer }
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{ Failure, Success }
 
 trait BaristaService extends BaseService {
   protected val serviceName = "BaristaService"
@@ -21,8 +20,8 @@ trait BaristaService extends BaseService {
         complete(Status(Duration(ManagementFactory.getRuntimeMXBean.getUptime, MILLISECONDS).toString))
       }
     } ~ path("stop") {
-      get {
-        log.info("[GET] /stop executed")
+      post {
+        log.info("[POST] /stop executed")
         baristaController.stop()
         complete {
           System.exit(0)
@@ -30,14 +29,14 @@ trait BaristaService extends BaseService {
         }
       }
     } ~ pathPrefix("api") {
-      path("offers") {
+      path("cluster-resources") {
         get {
-          log.info("[GET] /api/offers executed")
+          log.info("[GET] /api/cluster-resources executed")
           complete(JsonTransformer getJsonArray baristaController.offers() prettyPrint)
         }
-      } ~ path("apps") {
+      } ~ path("services") {
         post {
-          log.info("[POST] /api/apps executed")
+          log.info("[POST] /api/services executed")
           entity(as[DockerEntity]) { dockerEntity =>
             complete(baristaController.launchDockerEntity(dockerEntity).name())
           }

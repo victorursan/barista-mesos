@@ -32,11 +32,11 @@ The `deploy.sh` script will:
 ### Supported
 - getting cluster availalbe resoruces
 ```
-[GET] /api/offers
+[GET] /api/cluster-resources
 ```
 - deploying a container
 ```
-[POST] /api/apps
+[POST] /api/services
 ```
 JSON format to describe the container:
 ```
@@ -51,7 +51,10 @@ JSON format to describe the container:
 ```
 - stop the framework
 ```
-[GET] /stop
+[POST] /stop
 ```
-### Comming Soon
- - Container Replace/Scale (Update)
+### Coming Soon
+ - Container Replace (Hard Update)
+ - Container Scale Up/Down
+ - Container Load Balancing (Ngnix or HAProxy)
+ - Hot Replace - handles request draining
