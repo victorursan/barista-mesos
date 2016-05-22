@@ -14,6 +14,4 @@ trait BaseService extends Protocol with SprayJsonSupport with Config with Direct
   protected def system: ActorSystem
 
   protected def materializer: ActorMaterializer
-
-  protected def log: LoggingAdapter = Logging(system, serviceName)
 }

@@ -14,6 +14,7 @@ libraryDependencies ++= {
   val akkaStreamV   = "2.4.4"
   val apacheMesosV  = "0.28.0"
   val rxScalaV      = "0.26.1"
+  val slf4jV        = "1.7.21"
   Seq(
     "com.typesafe.akka"       %% "akka-stream"                          % akkaStreamV,
     "com.typesafe.akka"       %% "akka-http-core"                       % akkaStreamV,
@@ -23,7 +24,9 @@ libraryDependencies ++= {
     "org.scala-lang"          % "scala-library"                         % scalaV,
     "org.scala-lang"          % "scala-reflect"                         % scalaV,
     "org.scala-lang"          % "scala-compiler"                        % scalaV,
-    "io.reactivex"            % "rxscala_2.11"                          % rxScalaV
+    "io.reactivex"            % "rxscala_2.11"                          % rxScalaV,
+    "org.slf4j"               % "slf4j-api"                             % slf4jV,
+    "org.slf4j"               % "slf4j-simple"                          % slf4jV
   )
 }
 

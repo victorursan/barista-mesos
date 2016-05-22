@@ -4,11 +4,13 @@ import java.lang.management.ManagementFactory
 
 import com.victorursan.barista.BaristaController
 import com.victorursan.utils.{ DockerEntity, JsonTransformer }
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 trait BaristaService extends BaseService {
+  private val log = LoggerFactory.getLogger(classOf[BaristaService])
   protected val serviceName = "BaristaService"
   private val baristaController: BaristaController = new BaristaController
   baristaController.start()

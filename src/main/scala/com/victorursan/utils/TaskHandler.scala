@@ -1,6 +1,5 @@
 package com.victorursan.utils
 
-import org.apache.mesos.Protos
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.Protos._
 
@@ -31,7 +30,7 @@ object TaskHandler {
       .setDocker(dockerInfo)
       .build
 
-  private def createScalarResource(name: String, value: Double): Protos.Resource =
+  private def createScalarResource(name: String, value: Double): Resource =
     Resource.newBuilder
       .setName(name)
       .setType(Value.Type.SCALAR)
