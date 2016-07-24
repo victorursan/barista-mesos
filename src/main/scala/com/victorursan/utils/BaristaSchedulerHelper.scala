@@ -15,7 +15,7 @@ object BaristaSchedulerHelper {
   }
 
   def bestOfferForEntity(offers: List[Offer], dockerEntity: DockerEntity): Offer = {
-    log.info(s"isGoodEnoughOffer: offers: $offers, dockerEntity: $dockerEntity)")
+    log.info(s"bestOfferForEntity: offers: $offers, dockerEntity: $dockerEntity)")
     offers.filter(isGoodEnoughOffer(_, dockerEntity)).sortBy(OfferHandler.getResource(_, "cpus")).head
   }
 
