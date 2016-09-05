@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 name          := "barista"
 organization  := "com.victorursan"
-version       := "0.0.1"
+version       := "0.0.2"
 scalaVersion  := "2.11.8"
 scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
 
@@ -11,8 +11,8 @@ assemblyJarName := "barista_snapshot.jar"
 
 libraryDependencies ++= {
   val scalaV        = "2.11.8"
-  val akkaStreamV   = "2.4.4"
-  val apacheMesosV  = "0.28.0"
+  val akkaStreamV   = "2.4.9"
+  val apacheMesosV  = "1.0.0"
   val rxScalaV      = "0.26.1"
   val slf4jV        = "1.7.21"
   Seq(
