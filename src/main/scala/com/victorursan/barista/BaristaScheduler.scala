@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 class BaristaScheduler extends Scheduler {
   private val log = LoggerFactory.getLogger(classOf[BaristaScheduler])
 
-  private val offersSubject = Subject[List[Offer]]()
+  //  private val offersSubject = Subject[List[Offer]]()
 
-  def subscribe(subscriber: Subscriber[List[Offer]]): Unit = offersSubject.subscribe(subscriber)
+  //  def subscribe(subscriber: Subscriber[List[Offer]]): Unit = offersSubject.subscribe(subscriber)
 
   def error(driver: SchedulerDriver, message: String): Unit = {
     log.info(s"error: driver: $driver, message: $message")
@@ -46,7 +46,7 @@ class BaristaScheduler extends Scheduler {
 
   def resourceOffers(driver: SchedulerDriver, offers: util.List[Offer]): Unit = {
     log.info(s"resourceOffers: driver: $driver, offers: $offers")
-    offersSubject.onNext(offers.asScala.toList)
+    //    offersSubject.onNext(offers.asScala.toList)
   }
 
   def reregistered(driver: SchedulerDriver, masterInfo: MasterInfo): Unit = {

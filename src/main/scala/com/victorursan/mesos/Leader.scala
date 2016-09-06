@@ -7,7 +7,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
-import scaldi.LazyBinding
 
 import scala.concurrent.Future
 import scala.language.postfixOps

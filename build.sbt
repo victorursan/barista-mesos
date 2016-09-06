@@ -13,7 +13,6 @@ libraryDependencies ++= {
   val scalaV        = "2.11.8"
   val akkaStreamV   = "2.4.9"
   val apacheMesosV  = "1.0.0"
-  val rxScalaV      = "0.26.1"
   val slf4jV        = "1.7.21"
   Seq(
     "com.typesafe.akka"       %% "akka-stream"                          % akkaStreamV,
@@ -24,7 +23,6 @@ libraryDependencies ++= {
     "org.scala-lang"          % "scala-library"                         % scalaV,
     "org.scala-lang"          % "scala-reflect"                         % scalaV,
     "org.scala-lang"          % "scala-compiler"                        % scalaV,
-    "io.reactivex"            % "rxscala_2.11"                          % rxScalaV,
     "org.slf4j"               % "slf4j-api"                             % slf4jV,
     "org.slf4j"               % "slf4j-simple"                          % slf4jV
   )
@@ -34,12 +32,6 @@ libraryDependencies ++= {
 lazy val root = project.in(file("."))
 scalariformSettings
 Revolver.settings
-
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(AlignSingleLineCaseStatements, true)
-  .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
-  .setPreference(DoubleIndentClassDeclaration, true)
-
 
 initialCommands := """|import akka.actor._
                       |import akka.pattern._

@@ -19,12 +19,12 @@ class BaristaController {
 
   private val resources: mutable.Map[String, Offer] = mutable.Map()
 
-  scheduler.subscribe(new Subscriber[List[Offer]]() {
-    log.info(s"${classOf[BaristaController]} subscribed to scheduler: ${scheduler.getClass}")
-    override def onNext(list: List[Offer]): Unit = list.foreach(offer => resources(offer.getSlaveId.getValue) = offer)
-    override def onError(error: Throwable): Unit = log.error(s"subscriber: ${error.printStackTrace()}")
-    override def onCompleted(): Unit = log.error(s"subscriber completed")
-  })
+  //  scheduler.subscribe(new Subscriber[List[Offer]]() {
+  //    log.info(s"${classOf[BaristaController]} subscribed to scheduler: ${scheduler.getClass}")
+  //    override def onNext(list: List[Offer]): Unit = list.foreach(offer => resources(offer.getSlaveId.getValue) = offer)
+  //    override def onError(error: Throwable): Unit = log.error(s"subscriber: ${error.printStackTrace()}")
+  //    override def onCompleted(): Unit = log.error(s"subscriber completed")
+  //  })
 
   def start(): Unit = {
     log.info(s"driver start")
