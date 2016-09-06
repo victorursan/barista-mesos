@@ -39,7 +39,7 @@ trait BaristaService extends BaseService {
       }
     } ~ path("leader") {
       complete {
-        Leader.leader
+        Leader.get()
       }
     }
   //  ~ pathPrefix("api") {

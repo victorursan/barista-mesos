@@ -7,6 +7,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
+import scaldi.LazyBinding
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -22,14 +23,14 @@ object Leader {
 
   private val log = LoggerFactory.getLogger(serviceName)
 
-  lazy val leader: Future[Option[String]] = {
+  def get(masterUri: Uri = "http://10.1.1.11:5050/redirect", leaderHeader: String = "Location"): Future[Option[String]] = {
     log.info("Searching for leader.")
-    val httpRequest = HttpRequest(uri = "http://10.1.1.11:5050/redirect",
+    val httpRequest = HttpRequest(uri = masterUri,
       method = GET,
       headers = List(Accept(MediaRange(MediaTypes.`application/json`))))
     log.info(s"$httpRequest")
     val responseFuture1: Future[HttpResponse] = Http().singleRequest(httpRequest)
-    responseFuture1.map(httpResponse => Some(httpResponse.getHeader("Location").get.value)).recover { case _ => None }
+    responseFuture1.map(httpResponse => Some(httpResponse.getHeader(leaderHeader).get.value)).recover { case _ => None }
   }
 
 }
