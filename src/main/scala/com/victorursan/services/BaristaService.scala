@@ -3,10 +3,13 @@ package com.victorursan.services
 import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.model.{ HttpHeader, HttpResponse, MediaTypes }
-import com.victorursan.barista.BaristaController
+import com.victorursan.barista.BaristaScheduler
+
+import scala.concurrent.ExecutionContext.Implicits.global
+//import com.victorursan.barista.BaristaController
 import com.victorursan.mesos.Leader
 import akka.http.scaladsl.model.headers._
-import com.victorursan.utils.{ DockerEntity, JsonTransformer }
+//import com.victorursan.utils.{ DockerEntity, JsonTransformer }
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -38,8 +41,12 @@ trait BaristaService extends BaseService {
         }
       }
     } ~ path("leader") {
+
       complete {
-        Leader.get()
+        Future {
+          Leader.get()
+            .flatMap { uri => Future { uri.path.toString() } }
+        }
       }
     }
   //  ~ pathPrefix("api") {
