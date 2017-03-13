@@ -1,50 +1,42 @@
-import scalariform.formatter.preferences._
+name := "barista-mesos"
 
-name          := "barista"
-organization  := "com.victorursan"
-version       := "0.0.2"
-scalaVersion  := "2.11.8"
-scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
+version := "1.0"
 
-mainClass in assembly := some("com.victorursan.Main")
-assemblyJarName := "barista_snapshot.jar"
+mainClass := Some("com.victor.Main")
+
+scalaVersion := "2.12.1"
+updateOptions := updateOptions.value.withLatestSnapshots(false)
+
+resolvers ++= Seq(
+  "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
+  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+  "ossrh" at "https://oss.sonatype.org/content/repositories/snapshots/",
+  Resolver.bintrayRepo("hseeberger", "maven")
+)
+
+compileOrder in Compile := CompileOrder.ScalaThenJava
 
 libraryDependencies ++= {
-  val scalaV        = "2.11.8"
-  val akkaStreamV   = "2.4.10"
-  val slf4jV        = "1.7.21"
+  val AkkaVersion = "2.5-M1"
+  val AkkaHttpVersion = "10.0.3"
+  val Json4sVersion = "3.5.0"
+  val LogbackVersion = "1.2.1"
+  val AkkaJson4s = "1.12.0"
+  val Mesos = "1.1.0"
+  val RxJavaMesos = "0.1.2-SNAPSHOT"
   Seq(
-    "com.typesafe.akka"       %% "akka-stream"                          % akkaStreamV,
-    "com.typesafe.akka"       %% "akka-http-core"                       % akkaStreamV,
-    "com.typesafe.akka"       %% "akka-http-spray-json-experimental"    % akkaStreamV,
-    "com.typesafe.akka"       %% "akka-http-testkit"                    % akkaStreamV,
-    "org.scala-lang"          % "scala-library"                         % scalaV,
-    "org.scala-lang"          % "scala-reflect"                         % scalaV,
-    "org.scala-lang"          % "scala-compiler"                        % scalaV,
-    "org.slf4j"               % "slf4j-api"                             % slf4jV,
-    "org.slf4j"               % "slf4j-simple"                          % slf4jV
+    "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion,
+    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
+    "ch.qos.logback" % "logback-classic" % LogbackVersion,
+    "org.json4s" %% "json4s-native" % Json4sVersion,
+    "org.json4s" %% "json4s-ext" % Json4sVersion,
+    "io.reactivex" %% "rxscala" % "0.26.5" withSources() withJavadoc(),
+    "de.heikoseeberger" %% "akka-http-json4s" % AkkaJson4s,
+    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-client" % RxJavaMesos,
+    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos,
+    "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc()
+
   )
 }
 
-
-lazy val root = project.in(file("."))
-scalariformSettings
-Revolver.settings
-
-initialCommands := """|import akka.actor._
-                      |import akka.pattern._
-                      |import akka.util._
-                      |import scala.concurrent._
-                      |import scala.concurrent.duration._""".stripMargin
-
-publishMavenStyle := true
-publishArtifact in Test := false
-pomIncludeRepository := { _ => false }
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value) {
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  } else {
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  }
-}
+    
