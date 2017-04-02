@@ -13,10 +13,15 @@ import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
 import org.slf4j.LoggerFactory
-import rx.lang.scala.Observable
-//import rx.lang.scala.Observable.just
+import rx.Scheduler
+import rx.lang.scala.subjects.ReplaySubject
+import rx.lang.scala.{Observable, Subject, Subscription}
+//import rx.lang.scala.subjects.PublishSubject
+import rx.subjects.PublishSubject
+//import rx.subjects.PublishSubject
+import rx.lang.scala.Observable.{just, from}
 //import rx.Observable
-import rx.Observable.{from, just}
+//import rx.Observable.{from, just}
 import rx.lang.scala.JavaConversions._
 
 import scala.collection.JavaConverters._
@@ -44,11 +49,11 @@ object Main {
       .setValue(fwId)
       .build()
 
-    val stateObject = State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState](frameworkID, containerName, containerImage, role, cpusPerTask, memb)
-
     val clientBuilder = ProtobufMesosClientBuilder
       .schedulerUsingProtos.mesosUri(mesosUri)
       .applicationUserAgentEntry(UserAgentEntries.literal("com.victorursan", "barista"))
+
+    val stateObject = State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState](frameworkID, containerName, containerImage, role, cpusPerTask, memb)
 
     val subscribeCall = SchedulerCalls.subscribe(
       stateObject.fwId,
@@ -60,7 +65,11 @@ object Main {
         .setRole(stateObject.resourceRole)
         .build())
 
-    val stateObservable: Observable[State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState]] = just(stateObject).repeat
+    val stateObservable: Subject[State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState]] = ReplaySubject.withSize(100)
+
+//    val stateObservable: Observable[State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState]] =
+//      just(stateObject)
+//    pub.observeOn(Scheduler.Worker)
 
     clientBuilder
       .subscribe(subscribeCall)
@@ -69,7 +78,7 @@ object Main {
 
         val offerEvaluations: Observable[Optional[SinkOperation[Call]]] =
           events.filter { (event: Event) => event.getType == Event.Type.OFFERS }
-            .flatMap { (event: Event) => from(event.getOffers.getOffersList) }
+            .flatMap { (event: Event) => from(event.getOffers.getOffersList.asScala) }
             .zip(stateObservable)
             .map(t => Optional.of(Main.handleOffer(t)))
 
@@ -79,8 +88,7 @@ object Main {
             .zip(stateObservable)
             .doOnCompleted { (event: Event, state: State[FrameworkID, TaskID, TaskState]) =>
               val status = event.getUpdate.getStatus
-              state.put(status.getTaskId, status.getState)
-            }
+              state.put(status.getTaskId, status.getState)}
             .map { case (event: Event, state: State[FrameworkID, TaskID, TaskState]) =>
               val status = event.getUpdate.getStatus
               val ack = SchedulerCalls.ackUpdate(state.fwId, status.getUuid, status.getAgentId, status.getTaskId)
@@ -98,7 +106,10 @@ object Main {
             .merge(errorLogger)).asInstanceOf[rx.Observable[Optional[SinkOperation[Call]]]]
       }
 
-    clientBuilder.build.openStream.await()
+    val stream = clientBuilder.build.openStream
+    stateObservable.onNext(stateObject.copy(containerName = "A"))
+    stream.await()
+
   }
 
 
@@ -125,8 +136,9 @@ object Main {
         }
         if (tasks.nonEmpty) {
           LOGGER.info("Launching {} tasks", tasks.size)
-          sink(
-            sleep(frameworkId, ids.asJava, tasks.asJava), { () => tasks.foreach { task => state.put(task.getTaskId, TaskState.TASK_STAGING) } }, { e: Throwable => LOGGER.warn("", e) })
+          sink(sleep(frameworkId, ids.asJava, tasks.asJava),
+            { () => tasks.foreach { task => state.put(task.getTaskId, TaskState.TASK_STAGING) } },
+            { e: Throwable => LOGGER.warn("", e) })
         } else {
           sink(decline(frameworkId, ids.asJava))
         }
@@ -161,7 +173,6 @@ object Main {
             .setValue(taskId))
         .setAgentId(agentId)
           .setHealthCheck( HealthCheck.newBuilder())
-          .setco
         .setCommand(
           CommandInfo.newBuilder
             .setEnvironment(
