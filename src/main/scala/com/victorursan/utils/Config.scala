@@ -1,4 +1,4 @@
-package com.victorursan.barista
+package com.victorursan.utils
 
 import com.typesafe.config.ConfigFactory
 
@@ -8,6 +8,6 @@ import com.typesafe.config.ConfigFactory
 trait Config {
   private val config = ConfigFactory.load()
   private val httpConfig = config.getConfig("http")
-  val httpInterface = httpConfig.getString("interface")
-  val httpPort = httpConfig.getInt("port")
+  val httpInterface: String = httpConfig.getString("interface")
+  val httpPort: Int = httpConfig.getInt("port")
 }

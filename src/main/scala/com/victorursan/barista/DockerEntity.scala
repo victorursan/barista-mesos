@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.barista
 
 /**
   * Created by victor on 3/12/17.

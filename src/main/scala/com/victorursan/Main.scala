@@ -9,6 +9,7 @@ import com.mesosphere.mesos.rx.java.protobuf.SchedulerCalls.decline
 import com.mesosphere.mesos.rx.java.protobuf.{ProtoUtils, ProtobufMesosClientBuilder, SchedulerCalls}
 import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.mesosphere.mesos.rx.java.{SinkOperation, SinkOperations}
+import com.victorursan.barista.{DockerEntity, DockerResource, State, TaskHandler}
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
@@ -29,10 +30,10 @@ import scala.collection.JavaConverters._
 /**
   * Created by victor on 3/6/17.
   */
-object Main {
+object Main extends App {
   private val LOGGER = LoggerFactory.getLogger("main")
 
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     val mesosUri = URI.create("http://localhost:8000/mesos/api/v1/scheduler")
     val role = "*"
     val fwName = "Barista"

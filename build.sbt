@@ -17,8 +17,8 @@ resolvers ++= Seq(
 compileOrder in Compile := CompileOrder.ScalaThenJava
 
 libraryDependencies ++= {
-  val AkkaVersion = "2.5.0-RC2"
-  val AkkaHttpVersion = "10.0.3"
+  val AkkaVersion = "2.4.17"
+  val AkkaHttpVersion = "10.0.5"
   val Json4sVersion = "3.5.0"
   val LogbackVersion = "1.2.1"
   val AkkaJson4s = "1.12.0"

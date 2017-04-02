@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.barista
 
 import java.util.concurrent.atomic.AtomicInteger
 

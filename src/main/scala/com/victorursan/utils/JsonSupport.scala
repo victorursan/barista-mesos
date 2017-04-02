@@ -1,7 +1,7 @@
 package com.victorursan.utils
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.victorursan.{DockerEntity, DockerResource}
+import com.victorursan.barista.{DockerEntity, DockerResource}
 import spray.json.DefaultJsonProtocol
 
 /**

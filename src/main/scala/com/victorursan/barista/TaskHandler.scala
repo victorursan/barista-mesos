@@ -1,4 +1,4 @@
-package com.victorursan
+package com.victorursan.barista
 
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.v1.Protos._
