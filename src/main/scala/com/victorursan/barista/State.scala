@@ -10,7 +10,7 @@ import scala.collection.concurrent.TrieMap
 /**
   * Created by victor on 3/8/17.
   */
-case class State[FwId, TaskId, TaskState](fwId: FwId, containerName: String, containerImage: String, resourceRole: String, cpusPerTask: Double, memMbPerTask: Double) {
+case class State[FwId, TaskId, TaskState](frameworkId: FwId, dockerEntity: DockerEntity, resourceRole: String) {
   private val LOGGER = LoggerFactory.getLogger(classOf[State[_, _, _]])
 
   val offerCounter: AtomicInteger = new AtomicInteger
