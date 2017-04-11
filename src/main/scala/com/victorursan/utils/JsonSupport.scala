@@ -9,5 +9,5 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
   */
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = jsonFormat2(DockerResource)
-  implicit val dockerServiceProtocol: RootJsonFormat[DockerEntity] = jsonFormat3(DockerEntity)
+  implicit val dockerServiceProtocol: RootJsonFormat[DockerEntity] = jsonFormat4(DockerEntity)
 }
