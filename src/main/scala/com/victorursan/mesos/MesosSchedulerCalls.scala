@@ -1,7 +1,7 @@
 package com.victorursan.mesos
 
-import java.util.function.Function
 import java.net.URI
+import java.util.function.Function
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry

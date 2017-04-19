@@ -1,7 +1,7 @@
 package com.victorursan.mesos
 
 import org.apache.mesos.v1.Protos.{InverseOffer, Offer, OfferID, TaskStatus}
-import org.apache.mesos.v1.scheduler.Protos.Event.{Failure, Message, Subscribed, Error}
+import org.apache.mesos.v1.scheduler.Protos.Event.{Error, Failure, Message, Subscribed}
 
 
 /**

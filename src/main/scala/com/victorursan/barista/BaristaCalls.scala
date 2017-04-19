@@ -1,8 +1,8 @@
 package com.victorursan.barista
 
+import java.net.URI
 import java.util.function.Function
 import java.util.{Optional, UUID}
-import java.net.URI
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, SchedulerCalls}
@@ -10,10 +10,10 @@ import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.{MesosSchedulerCallbacks, MesosSchedulerCalls}
 import org.apache.mesos.v1.Protos
-import org.apache.mesos.v1.Protos.{FrameworkID, FrameworkInfo, Offer}
-import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
+import org.apache.mesos.v1.Protos.{FrameworkID, Offer}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
 import org.apache.mesos.v1.scheduler.Protos.Call.{Accept, AcceptInverseOffers, Acknowledge, Decline, DeclineInverseOffers, Kill, Message, Reconcile, Request, Shutdown}
+import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
 import rx.lang.scala.JavaConversions.toScalaObservable
 import rx.lang.scala.Observable
 import rx.subjects.{PublishSubject, SerializedSubject}
@@ -57,34 +57,34 @@ class BaristaCalls extends MesosSchedulerCalls {
         val callback: MesosSchedulerCallbacks = new BaristaCallbacks
 
         events.filter(_.getType == Event.Type.ERROR)
-        .subscribe {e: Event => callback.receivedError(e.getError)}
+          .subscribe { e: Event => callback.receivedError(e.getError) }
 
         events.filter(_.getType == Event.Type.FAILURE)
-        .subscribe {e: Event => callback.receivedFailure(e.getFailure)}
+          .subscribe { e: Event => callback.receivedFailure(e.getFailure) }
 
         events.filter(_.getType == Event.Type.HEARTBEAT)
-        .subscribe {_ => callback.receivedHeartbeat()}
+          .subscribe { _ => callback.receivedHeartbeat() }
 
         events.filter(_.getType == Event.Type.INVERSE_OFFERS)
-        .subscribe {e: Event => callback.receivedInverseOffers(e.getInverseOffers.getInverseOffersList.asScala.toList)}
+          .subscribe { e: Event => callback.receivedInverseOffers(e.getInverseOffers.getInverseOffersList.asScala.toList) }
 
         events.filter(_.getType == Event.Type.MESSAGE)
-        .subscribe {e: Event => callback.receivedMessage(e.getMessage)}
+          .subscribe { e: Event => callback.receivedMessage(e.getMessage) }
 
         events.filter(_.getType == Event.Type.OFFERS)
-        .subscribe {e: Event => callback.receivedOffers(e.getOffers.getOffersList.asScala.toList)}
+          .subscribe { e: Event => callback.receivedOffers(e.getOffers.getOffersList.asScala.toList) }
 
         events.filter(_.getType == Event.Type.RESCIND)
-        .subscribe {e: Event => callback.receivedRescind(e.getRescind.getOfferId)}
+          .subscribe { e: Event => callback.receivedRescind(e.getRescind.getOfferId) }
 
         events.filter(_.getType == Event.Type.RESCIND_INVERSE_OFFER)
-        .subscribe {e: Event => callback.receivedRescindInverseOffer(e.getRescindInverseOffer.getInverseOfferId)}
+          .subscribe { e: Event => callback.receivedRescindInverseOffer(e.getRescindInverseOffer.getInverseOfferId) }
 
         events.filter(_.getType == Event.Type.SUBSCRIBED)
-        .subscribe {e: Event =>
-          frameworkID = e.getSubscribed.getFrameworkId
-          callback.receivedSubscribed(e.getSubscribed)
-        }
+          .subscribe { e: Event =>
+            frameworkID = e.getSubscribed.getFrameworkId
+            callback.receivedSubscribed(e.getSubscribed)
+          }
 
         events.filter((event: Event) => event.getType == Event.Type.UPDATE)
           .subscribe((e: Event) => {
@@ -108,10 +108,16 @@ class BaristaCalls extends MesosSchedulerCalls {
     try {
       openStream.await()
     } catch {
-      case t : Throwable => t.printStackTrace()
+      case t: Throwable => t.printStackTrace()
     }
   }
 
+  override def acknowledge(agentId: Protos.AgentID, taskId: Protos.TaskID, uuid: ByteString): Unit =
+    sendCall(Call.newBuilder()
+      .setAcknowledge(Acknowledge.newBuilder
+        .setAgentId(agentId)
+        .setTaskId(taskId)
+        .setUuid(uuid)), ACKNOWLEDGE)
 
   override def teardown(): Unit = sendCall(Call.newBuilder(), TEARDOWN)
 
@@ -130,6 +136,18 @@ class BaristaCalls extends MesosSchedulerCalls {
         case _ => Decline.newBuilder.addAllOfferIds(offerIds.asJava)
       }
     ), DECLINE)
+
+  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
+    sendCall(callBuilder.setType(callType)
+      .setFrameworkId(frameworkID)
+      .build)
+
+  private def sendCall(call: Call): Unit = {
+    if (publishSubject == null) {
+      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
+    }
+    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
+  }
 
   override def acceptInverseOffers(offerIds: List[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAcceptInverseOffers(
@@ -165,13 +183,6 @@ class BaristaCalls extends MesosSchedulerCalls {
       }
     }), SHUTDOWN)
 
-  override def acknowledge(agentId: Protos.AgentID, taskId: Protos.TaskID, uuid: ByteString): Unit =
-    sendCall(Call.newBuilder()
-      .setAcknowledge(Acknowledge.newBuilder
-        .setAgentId(agentId)
-        .setTaskId(taskId)
-        .setUuid(uuid)), ACKNOWLEDGE)
-
   override def reconsile(tasks: List[Reconcile.Task]): Unit =
     sendCall(Call.newBuilder()
       .setReconcile(Reconcile.newBuilder
@@ -183,18 +194,6 @@ class BaristaCalls extends MesosSchedulerCalls {
         .setAgentId(agentId)
         .setExecutorId(executorId)
         .setData(data)), MESSAGE)
-
-  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
-    sendCall(callBuilder.setType(callType)
-      .setFrameworkId(frameworkID)
-      .build)
-
-  private def sendCall(call: Call): Unit = {
-    if (publishSubject == null) {
-      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
-    }
-    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
-  }
 
   override def request(requests: List[Protos.Request]): Unit =
     sendCall(Call.newBuilder()

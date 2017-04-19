@@ -1,13 +1,13 @@
 package com.victorursan.barista
 
 import com.victorursan.mesos.MesosSchedulerCallbacks
-import org.apache.mesos.v1.Protos.{Offer, InverseOffer, OfferID, TaskStatus}
-import org.apache.mesos.v1.scheduler.Protos.Event.{Subscribed, Message, Failure, Error}
+import org.apache.mesos.v1.Protos.{InverseOffer, Offer, OfferID, TaskStatus}
+import org.apache.mesos.v1.scheduler.Protos.Event.{Error, Failure, Message, Subscribed}
 
 /**
   * Created by victor on 4/10/17.
   */
-class BaristaCallbacks extends MesosSchedulerCallbacks{
+class BaristaCallbacks extends MesosSchedulerCallbacks {
   override def receivedSubscribed(subscribed: Subscribed): Unit = print(subscribed)
 
   override def receivedOffers(offers: List[Offer]): Unit = print(offers)
