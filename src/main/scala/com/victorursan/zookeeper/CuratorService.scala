@@ -21,6 +21,15 @@ object CuratorService {
       .forPath(path, payload)
   }
 
+  def read(path: String, decompressed: Boolean = false): Array[Byte] = if (decompressed) {
+    client.getData
+      .decompressed()
+      .forPath(path)
+  } else {
+    client.getData
+      .forPath(path)
+  }
+
   def update(path: String, payload: Array[Byte]): Unit =
     client.setData()
       .forPath(path, payload)
@@ -30,12 +39,4 @@ object CuratorService {
       .deletingChildrenIfNeeded()
       .forPath(path)
 
-  def read(path: String, decompressed: Boolean = false): Array[Byte] = if (decompressed) {
-    client.getData
-      .decompressed()
-      .forPath(path)
-  } else {
-    client.getData
-      .forPath(path)
-  }
 }
