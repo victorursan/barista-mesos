@@ -3,6 +3,7 @@ package com.victorursan.barista
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.mesosphere.mesos.rx.java.protobuf.ProtoUtils.protoToString
+import com.victorursan.state.DockerEntity
 import org.slf4j.LoggerFactory
 
 import scala.collection.concurrent.TrieMap

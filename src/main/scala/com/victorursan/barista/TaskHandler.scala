@@ -1,5 +1,6 @@
 package com.victorursan.barista
 
+import com.victorursan.state.DockerEntity
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.v1.Protos._
 
@@ -12,11 +13,11 @@ object TaskHandler {
 
   private val uniqueNumber = (1 to Int.MaxValue) iterator
 
-  def createTaskWith(offer: Offer, dockerEntity: DockerEntity): TaskInfo = {
+  def createTaskWith(agentID: AgentID, dockerEntity: DockerEntity): TaskInfo = {
     val taskID: TaskID = createNexTaskID
     val dockerInfo: DockerInfo = createDockerInfo(dockerEntity.image)
     val containerInfo: ContainerInfo = createContainerInfo(dockerInfo)
-    createDockerTask(taskID, offer, containerInfo, dockerEntity)
+    createDockerTask(taskID, agentID, containerInfo, dockerEntity)
   }
 
   private def createNexTaskID: TaskID =
@@ -37,11 +38,11 @@ object TaskHandler {
       .setDocker(dockerInfo)
       .build
 
-  private def createDockerTask(taskID: TaskID, offer: Offer, containerInfo: ContainerInfo, dockerEntity: DockerEntity): TaskInfo =
+  private def createDockerTask(taskID: TaskID, agentID: AgentID, containerInfo: ContainerInfo, dockerEntity: DockerEntity): TaskInfo =
     TaskInfo.newBuilder
       .setName(dockerEntity.name)
       .setTaskId(taskID)
-      .setAgentId(offer.getAgentId)
+      .setAgentId(agentID)
       .addResources(createScalarResource("cpus", dockerEntity.resource.cpu))
       .addResources(createScalarResource("mem", dockerEntity.resource.mem))
       .setContainer(containerInfo)

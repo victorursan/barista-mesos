@@ -1,6 +1,7 @@
 package com.victorursan.barista
 
 import java.net.URI
+import java.util
 import java.util.function.Function
 import java.util.{Optional, UUID}
 
@@ -9,6 +10,7 @@ import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, Schedu
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.{MesosSchedulerCallbacks, MesosSchedulerCalls}
+import com.victorursan.state.DockerEntity
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{FrameworkID, Offer}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
@@ -26,11 +28,10 @@ import scala.collection.JavaConverters._
 class BaristaCalls extends MesosSchedulerCalls {
   private val fwName = "Barista"
   private val fwId = s"$fwName-${UUID.randomUUID}"
+  private val publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = PublishSubject.create[Optional[SinkOperation[Call]]]().toSerialized
   private var frameworkID = FrameworkID.newBuilder
     .setValue(fwId)
     .build()
-
-  private var publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = null
   private var openStream: AwaitableSubscription = null
 
   //
@@ -54,7 +55,7 @@ class BaristaCalls extends MesosSchedulerCalls {
       .processStream { case (unicastEvents: rx.Observable[Event]) =>
         val events: Observable[Event] = toScalaObservable(unicastEvents.share())
 
-        val callback: MesosSchedulerCallbacks = new BaristaCallbacks
+        val callback: MesosSchedulerCallbacks = new BaristaCallbacks(publishSubject, this)
 
         events.filter(_.getType == Event.Type.ERROR)
           .subscribe { e: Event => callback.receivedError(e.getError) }
@@ -97,9 +98,6 @@ class BaristaCalls extends MesosSchedulerCalls {
             callback.receivedUpdate(e.getUpdate.getStatus)
           })
 
-
-        val pubSub: PublishSubject[Optional[SinkOperation[Call]]] = PublishSubject.create()
-        publishSubject = pubSub.toSerialized
         publishSubject
       }
       .build
@@ -119,7 +117,22 @@ class BaristaCalls extends MesosSchedulerCalls {
         .setTaskId(taskId)
         .setUuid(uuid)), ACKNOWLEDGE)
 
-  override def teardown(): Unit = sendCall(Call.newBuilder(), TEARDOWN)
+  //    sendCall(Call.newBuilder().setAccept(
+  //      filtersOpt match {
+  //        case Some(filters) => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava).setFilters(filters)
+  //        case _ => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava)
+  //      }
+  //    ), ACCEPT)
+
+  def acceptContainer(dockerEntity: DockerEntity, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit =
+    this.accept(offerIds, List(
+    Offer.Operation.newBuilder()
+      .setType(Offer.Operation.Type.LAUNCH)
+      .setLaunch(
+        Offer.Operation.Launch.newBuilder
+          .addAllTaskInfos(List(TaskHandler.createTaskWith(agentId, dockerEntity)).asJava))
+      .build()),
+    filtersOpt)
 
   override def accept(offerIds: List[Protos.OfferID], offerOperations: List[Offer.Operation], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAccept(
@@ -128,6 +141,8 @@ class BaristaCalls extends MesosSchedulerCalls {
         case _ => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava)
       }
     ), ACCEPT)
+
+  override def teardown(): Unit = sendCall(Call.newBuilder(), TEARDOWN)
 
   override def decline(offerIds: List[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setDecline(

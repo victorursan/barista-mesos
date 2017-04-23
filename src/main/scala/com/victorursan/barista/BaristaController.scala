@@ -9,6 +9,7 @@ import com.mesosphere.mesos.rx.java.SinkOperations.sink
 import com.mesosphere.mesos.rx.java.protobuf.SchedulerCalls.decline
 import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
+import com.victorursan.state.DockerEntity
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.Call
@@ -36,11 +37,11 @@ class BaristaController {
     .build()
   var publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = null
   var openStream: AwaitableSubscription = null
+  val baristaCalls = new BaristaCalls
 
   def start(): Unit = {
 
-    val a = new BaristaCalls
-    a.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
+    baristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
 
     //    val clientBuilder = ProtobufMesosClientBuilder
     //      .schedulerUsingProtos.mesosUri(mesosUri)
@@ -160,6 +161,7 @@ class BaristaController {
   }
 
   def launchDockerEntity(dockerEntity: DockerEntity): String = {
+    baristaCalls.acceptContainer(dockerEntity, List(), null)
     val stateObject = State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState](frameworkID, dockerEntity)
     stateObservable.onNext(stateObject)
     ""
@@ -179,7 +181,7 @@ class BaristaController {
         var tasks: List[TaskInfo] = List()
         for ((cpu, mem) <- cpuList zip memList; if desiredRole == cpu.getRole && desiredRole == mem.getRole; dockerEntity = state.dockerEntity) {
           if (cpu.getScalar.getValue >= dockerEntity.resource.cpu && mem.getScalar.getValue >= dockerEntity.resource.mem) {
-            tasks ::= dockerTask(offer, dockerEntity)
+            tasks ::= dockerTask(agentId, dockerEntity)
           }
         }
         if (tasks.nonEmpty) {
@@ -208,6 +210,6 @@ class BaristaController {
                   .addAllTaskInfos(tasks))))
       .build
 
-  private def dockerTask(offer: Protos.Offer, dockerEntity: DockerEntity): TaskInfo = TaskHandler.createTaskWith(offer, dockerEntity)
+  private def dockerTask(agentID: AgentID, dockerEntity: DockerEntity): TaskInfo = TaskHandler.createTaskWith(agentID, dockerEntity)
 
 }

@@ -2,7 +2,8 @@ package com.victorursan.services
 
 import java.lang.management.ManagementFactory
 
-import com.victorursan.barista.{BaristaController, DockerEntity}
+import com.victorursan.barista.BaristaController
+import com.victorursan.state.DockerEntity
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global

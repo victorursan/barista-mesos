@@ -24,6 +24,7 @@ libraryDependencies ++= {
   val Spray = "1.3.3"
   val RxScala = "0.26.5"
   val RxJavaMesos = "0.1.2-SNAPSHOT"
+  val Curator = "2.12.0"
   Seq(
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion withSources() withJavadoc(),
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion withSources() withJavadoc(),
@@ -33,7 +34,10 @@ libraryDependencies ++= {
     "io.spray" %% "spray-json" % Spray withSources() withJavadoc(),
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-client" % RxJavaMesos withSources() withJavadoc(),
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos withSources() withJavadoc(),
-    "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc()
+    "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
+    "org.apache.curator" % "curator-framework" % Curator withSources(),
+    "org.apache.curator" % "curator-recipes" % Curator withSources(),
+    "org.apache.curator" % "curator-x-discovery" % Curator withSources()
   )
 }
 
