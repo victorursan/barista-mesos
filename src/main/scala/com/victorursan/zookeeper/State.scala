@@ -11,7 +11,7 @@ trait State {
 
   def tasksToKill: List[TaskID]
 
-  def addToAccept(bean: Bean)
+  def addToAccept(bean: Bean): List[Bean]
 
-  def addToKill(taskID: TaskID)
+  def addToKill(taskID: TaskID): List[TaskID]
 }

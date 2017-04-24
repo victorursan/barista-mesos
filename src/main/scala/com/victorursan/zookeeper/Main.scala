@@ -5,8 +5,10 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, 
 import com.victorursan.state.{Bean, DockerEntity, DockerResource}
 import com.victorursan.utils.JsonSupport
 import spray.json._
-import DefaultJsonProtocol._
-/**
+
+import scala.util.Try
+
+ /**
   * Created by victor on 4/23/17.
   */
 object Main extends App with JsonSupport{

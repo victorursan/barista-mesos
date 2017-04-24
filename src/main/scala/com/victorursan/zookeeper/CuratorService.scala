@@ -3,6 +3,8 @@ package com.victorursan.zookeeper
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
 
+import scala.util.Try
+
 /**
   * Created by victor on 4/23/17.
   */
@@ -12,27 +14,40 @@ object CuratorService {
   client.start()
   client.blockUntilConnected()
 
-  def create(path: String, payload: Array[Byte], compressed: Boolean = false): Unit = if (compressed) {
-    client.create()
-      .creatingParentsIfNeeded()
-      .forPath(path, payload)
-  } else {
-    client.create()
-      .forPath(path, payload)
-  }
+  def createOrUpdate(path: String, payload: Array[Byte], compressed: Boolean = false): Unit =
+    if (client.checkExists().forPath(path) != null) update _ else create _
 
-  def read(path: String, decompressed: Boolean = false): Array[Byte] = if (decompressed) {
-    client.getData
-      .decompressed()
-      .forPath(path)
-  } else {
-    client.getData
-      .forPath(path)
-  }
 
-  def update(path: String, payload: Array[Byte]): Unit =
-    client.setData()
-      .forPath(path, payload)
+  def create(path: String, payload: Array[Byte], compressed: Boolean = false): Unit =
+    if (compressed) {
+      client.create()
+        .creatingParentsIfNeeded()
+        .forPath(path, payload)
+    } else {
+      client.create()
+        .forPath(path, payload)
+    }
+
+  def update(path: String, payload: Array[Byte], compressed: Boolean = false): Unit =
+    if (compressed) {
+      client.setData()
+        .compressed()
+        .forPath(path, payload)
+    } else {
+      client.setData()
+        .forPath(path, payload)
+    }
+
+  def read(path: String, decompressed: Boolean = false): Array[Byte] =
+    if (decompressed) {
+      client.getData
+        .decompressed()
+        .forPath(path)
+    } else {
+      client.getData
+        .forPath(path)
+    }
+
 
   def delete(path: String): Unit =
     client.delete()
