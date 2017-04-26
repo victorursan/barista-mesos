@@ -3,8 +3,6 @@ package com.victorursan.zookeeper
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
 
-import scala.util.Try
-
 /**
   * Created by victor on 4/23/17.
   */
@@ -15,16 +13,18 @@ object CuratorService {
   client.blockUntilConnected()
 
   def createOrUpdate(path: String, payload: Array[Byte], compressed: Boolean = false): Unit =
-    if (client.checkExists().forPath(path) != null) update _ else create _
+    if (client.checkExists().forPath(path) != null) update(path, payload, compressed) else create(path, payload, compressed)
 
 
   def create(path: String, payload: Array[Byte], compressed: Boolean = false): Unit =
     if (compressed) {
       client.create()
+        .compressed()
         .creatingParentsIfNeeded()
         .forPath(path, payload)
     } else {
       client.create()
+        .creatingParentsIfNeeded()
         .forPath(path, payload)
     }
 

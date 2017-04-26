@@ -11,6 +11,7 @@ import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.{MesosSchedulerCallbacks, MesosSchedulerCalls}
 import com.victorursan.state.DockerEntity
+import com.victorursan.utils.Config
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{FrameworkID, Offer}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
@@ -25,7 +26,7 @@ import scala.collection.JavaConverters._
 /**
   * Created by victor on 4/10/17.
   */
-class BaristaCalls extends MesosSchedulerCalls {
+object BaristaCalls extends MesosSchedulerCalls {
   private val fwName = "Barista"
   private val fwId = s"$fwName-${UUID.randomUUID}"
   private val publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = PublishSubject.create[Optional[SinkOperation[Call]]]().toSerialized
@@ -55,36 +56,34 @@ class BaristaCalls extends MesosSchedulerCalls {
       .processStream { case (unicastEvents: rx.Observable[Event]) =>
         val events: Observable[Event] = toScalaObservable(unicastEvents.share())
 
-        val callback: MesosSchedulerCallbacks = new BaristaCallbacks(publishSubject, this)
-
         events.filter(_.getType == Event.Type.ERROR)
-          .subscribe { e: Event => callback.receivedError(e.getError) }
+          .subscribe { e: Event => BaristaCallbacks.receivedError(e.getError) }
 
         events.filter(_.getType == Event.Type.FAILURE)
-          .subscribe { e: Event => callback.receivedFailure(e.getFailure) }
+          .subscribe { e: Event => BaristaCallbacks.receivedFailure(e.getFailure) }
 
         events.filter(_.getType == Event.Type.HEARTBEAT)
-          .subscribe { _ => callback.receivedHeartbeat() }
+          .subscribe { _ => BaristaCallbacks.receivedHeartbeat() }
 
         events.filter(_.getType == Event.Type.INVERSE_OFFERS)
-          .subscribe { e: Event => callback.receivedInverseOffers(e.getInverseOffers.getInverseOffersList.asScala.toList) }
+          .subscribe { e: Event => BaristaCallbacks.receivedInverseOffers(e.getInverseOffers.getInverseOffersList.asScala.toList) }
 
         events.filter(_.getType == Event.Type.MESSAGE)
-          .subscribe { e: Event => callback.receivedMessage(e.getMessage) }
+          .subscribe { e: Event => BaristaCallbacks.receivedMessage(e.getMessage) }
 
         events.filter(_.getType == Event.Type.OFFERS)
-          .subscribe { e: Event => callback.receivedOffers(e.getOffers.getOffersList.asScala.toList) }
+          .subscribe { e: Event => BaristaCallbacks.receivedOffers(e.getOffers.getOffersList.asScala.toList) }
 
         events.filter(_.getType == Event.Type.RESCIND)
-          .subscribe { e: Event => callback.receivedRescind(e.getRescind.getOfferId) }
+          .subscribe { e: Event => BaristaCallbacks.receivedRescind(e.getRescind.getOfferId) }
 
         events.filter(_.getType == Event.Type.RESCIND_INVERSE_OFFER)
-          .subscribe { e: Event => callback.receivedRescindInverseOffer(e.getRescindInverseOffer.getInverseOfferId) }
+          .subscribe { e: Event => BaristaCallbacks.receivedRescindInverseOffer(e.getRescindInverseOffer.getInverseOfferId) }
 
         events.filter(_.getType == Event.Type.SUBSCRIBED)
           .subscribe { e: Event =>
             frameworkID = e.getSubscribed.getFrameworkId
-            callback.receivedSubscribed(e.getSubscribed)
+            BaristaCallbacks.receivedSubscribed(e.getSubscribed)
           }
 
         events.filter((event: Event) => event.getType == Event.Type.UPDATE)
@@ -95,7 +94,7 @@ class BaristaCalls extends MesosSchedulerCalls {
             if (!status.getUuid.isEmpty) {
               acknowledge(status.getAgentId, status.getTaskId, status.getUuid)
             }
-            callback.receivedUpdate(e.getUpdate.getStatus)
+            BaristaCallbacks.receivedUpdate(e.getUpdate.getStatus)
           })
 
         publishSubject

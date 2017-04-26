@@ -22,8 +22,7 @@ object StateController extends State with JsonSupport {
   }
 
   override def awaitingBeans: List[Bean] =
-    Try(CuratorService.read(awaitingPath)
-      .mkString
+    Try(new String(CuratorService.read(awaitingPath))
       .parseJson
       .convertTo[List[Bean]])
       .getOrElse(List())
@@ -35,8 +34,7 @@ object StateController extends State with JsonSupport {
   }
 
   override def tasksToKill: List[TaskID] =
-    Try(CuratorService.read(killingPath)
-      .mkString
+    Try(new String(CuratorService.read(killingPath))
       .parseJson
       .convertTo[List[String]]
       .map(TaskID.newBuilder()

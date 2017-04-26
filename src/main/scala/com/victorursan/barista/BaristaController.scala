@@ -9,7 +9,8 @@ import com.mesosphere.mesos.rx.java.SinkOperations.sink
 import com.mesosphere.mesos.rx.java.protobuf.SchedulerCalls.decline
 import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
-import com.victorursan.state.DockerEntity
+import com.victorursan.state.{Bean, DockerEntity}
+import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.Call
@@ -37,11 +38,11 @@ class BaristaController {
     .build()
   var publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = null
   var openStream: AwaitableSubscription = null
-  val baristaCalls = new BaristaCalls
+//  val baristaCalls = new BaristaCalls
 
   def start(): Unit = {
 
-    baristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
+    BaristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
 
     //    val clientBuilder = ProtobufMesosClientBuilder
     //      .schedulerUsingProtos.mesosUri(mesosUri)
@@ -161,7 +162,8 @@ class BaristaController {
   }
 
   def launchDockerEntity(dockerEntity: DockerEntity): String = {
-    baristaCalls.acceptContainer(dockerEntity, List(), null)
+    StateController.addToAccept(Bean(dockerEntity))
+//    baristaCalls.acceptContainer(dockerEntity, List(), null)
     val stateObject = State[Protos.FrameworkID, Protos.TaskID, Protos.TaskState](frameworkID, dockerEntity)
     stateObservable.onNext(stateObject)
     ""
