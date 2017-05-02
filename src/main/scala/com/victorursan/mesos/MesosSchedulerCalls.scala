@@ -5,6 +5,8 @@ import java.util.function.Function
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
+import com.victorursan.state.Bean
+import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.Offer.Operation
 import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile
@@ -13,10 +15,13 @@ import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile
   * Created by victor on 4/10/17.
   */
 trait MesosSchedulerCalls {
-  //  @throws[URISyntaxException]
   def subscribe(mesosMaster: URI, frameworkName: String, failoverTimeout: Double, mesosRole: String, applicationUserAgentEntry: Function[Class[_], UserAgentEntry], frameworkId: String): Unit
 
   def teardown(): Unit
+
+  def acceptContainer(bean: Bean, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit
+
+  def acceptContainers(bean: Bean, offerIds: List[Protos.OfferID], agentIds: List[Protos.AgentID], filtersOpt: Option[Protos.Filters] = None): Unit
 
   def accept(offerIds: List[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
 

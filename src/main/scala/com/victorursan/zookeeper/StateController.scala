@@ -1,6 +1,8 @@
 package com.victorursan.zookeeper
 
-import com.victorursan.state.Bean
+import java.nio.charset.StandardCharsets
+
+import com.victorursan.state.{Bean, DockerEntity}
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
@@ -10,36 +12,105 @@ import scala.util.Try
 /**
   * Created by victor on 4/24/17.
   */
-object StateController extends State with JsonSupport {
-  private val basePath: String = "/barista/state"
-  private val awaitingPath: String = s"$basePath/awaiting"
-  private val killingPath: String = s"$basePath/killing"
+object StateController extends JsonSupport with State {
+  private val basePath = "/barista/state"
+  private val awaitingPath = s"$basePath/awaiting"
+  private val historyAwaitingPath = s"$basePath/historyAwaiting"
+  private val nextIdPath = s"$basePath/nextId"
+  private val killingPath = s"$basePath/killing"
+  private val overviewPath = s"$basePath/overview"
 
-  override def addToAccept(bean: Bean): List[Bean] = {
-    val newBeans = bean :: awaitingBeans
+  override def addToOverview(taskId: String, state: String): Map[String, String] = {
+    val newOverview = getOverview + (taskId -> state)
+    CuratorService.createOrUpdate(overviewPath, newOverview.toJson.toString().getBytes)
+    newOverview
+  }
+
+  override def getOverview: Map[String, String] = {
+    Try(new String(CuratorService.read(overviewPath))
+      .parseJson
+      .convertTo[Map[String, String]])
+      .getOrElse(Map())
+  }
+
+  override def removeFromOverview(taskId: String): Map[String, String] = {
+    val newOverview = getOverview - taskId
+    CuratorService.createOrUpdate(overviewPath, overviewPath.toJson.toString().getBytes)
+    newOverview
+  }
+
+  def addToOldBeans(bean: Bean): Set[Bean] = addToOldBeans(Set(bean))
+
+
+  def addToOldBeans(beans: Set[Bean]): Set[Bean] = {
+    val newOldBeans = oldBeans ++ beans
+    CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
+    newOldBeans
+  }
+
+  def oldBeans: Set[Bean] =
+    Try(new String(CuratorService.read(historyAwaitingPath))
+      .parseJson
+      .convertTo[Set[Bean]])
+      .getOrElse(Set())
+
+  def removeOldBean(bean: Bean): Set[Bean] = removeOldBean(Set(bean))
+
+  def removeOldBean(beans: Set[Bean]): Set[Bean] = {
+    val localOldBeans = oldBeans
+    val newOldBeans = localOldBeans ++ (beans diff localOldBeans)
+    CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
+    newOldBeans
+  }
+
+  override def addToAccept(dockerEntity: DockerEntity): Set[Bean] = {
+    val nextId: String = getNextId
+    val newBeans: Set[Bean] = awaitingBeans + Bean(dockerEntity = dockerEntity, taskId = nextId)
+    CuratorService.createOrUpdate(awaitingPath, newBeans.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    newBeans
+  }
+
+  override def getNextId: String = {
+    val nextId = Try(BigInt(CuratorService.read(nextIdPath)).toLong).getOrElse(0l) + 1l
+    CuratorService.createOrUpdate(nextIdPath, BigInt(nextId).toByteArray)
+    nextId.toString
+  }
+
+  override def removeFromAccept(bean: Bean): Set[Bean] = removeFromAccept(Set(bean))
+
+  override def removeFromAccept(beans: Set[Bean]): Set[Bean] = {
+    val newBeans = awaitingBeans.diff(beans)
+    addToOldBeans(beans)
     CuratorService.createOrUpdate(awaitingPath, newBeans.toJson.toString().getBytes)
     newBeans
   }
 
-  override def awaitingBeans: List[Bean] =
+  override def awaitingBeans: Set[Bean] =
     Try(new String(CuratorService.read(awaitingPath))
       .parseJson
-      .convertTo[List[Bean]])
-      .getOrElse(List())
+      .convertTo[Set[Bean]])
+      .getOrElse(Set())
 
-  override def addToKill(taskID: TaskID): List[TaskID] = {
-    val newTasksKill = taskID :: tasksToKill
+  override def addToKill(taskID: TaskID): Set[TaskID] = {
+    val newTasksKill = tasksToKill + taskID
     CuratorService.createOrUpdate(awaitingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
     newTasksKill
   }
 
-  override def tasksToKill: List[TaskID] =
+  override def removeFromKill(taskID: TaskID): Set[TaskID] = removeFromKill(Set(taskID))
+
+  override def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID] = {
+    val newTasksKill = tasksToKill diff taskIDs
+    CuratorService.createOrUpdate(awaitingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+    newTasksKill
+  }
+
+  override def tasksToKill: Set[TaskID] =
     Try(new String(CuratorService.read(killingPath))
       .parseJson
-      .convertTo[List[String]]
+      .convertTo[Set[String]]
       .map(TaskID.newBuilder()
         .setValue(_)
         .build()))
-      .getOrElse(List())
-
+      .getOrElse(Set())
 }

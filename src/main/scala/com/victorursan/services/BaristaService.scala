@@ -2,6 +2,7 @@ package com.victorursan.services
 
 import java.lang.management.ManagementFactory
 
+import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
 import com.victorursan.state.DockerEntity
 import org.slf4j.LoggerFactory
@@ -23,11 +24,10 @@ trait BaristaService extends BaseService {
     baristaController.start()
   }
 
-  val routes =
+  val routes: Route =
     path("status") {
       get {
         log.info("[GET] /status executed")
-
         complete(Status(Duration(ManagementFactory.getRuntimeMXBean.getUptime, MILLISECONDS).toString))
       }
     } ~ path("stop") {
@@ -44,6 +44,13 @@ trait BaristaService extends BaseService {
       path("task") {
         post {
           log.info("[POST] /api/task launching a new entity")
+          entity(as[DockerEntity]) { dockerEntity =>
+            complete(baristaController.launchDockerEntity(dockerEntity))
+          }
+        }
+      } ~ path("overview") {
+        get {
+          log.info("[GET] /api/overview launching a new entity")
           entity(as[DockerEntity]) { dockerEntity =>
             complete(baristaController.launchDockerEntity(dockerEntity))
           }

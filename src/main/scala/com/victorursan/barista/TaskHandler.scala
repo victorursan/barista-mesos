@@ -1,6 +1,6 @@
 package com.victorursan.barista
 
-import com.victorursan.state.DockerEntity
+import com.victorursan.state.{Bean, DockerEntity}
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.v1.Protos._
 
@@ -11,18 +11,16 @@ import scala.language.postfixOps
   */
 object TaskHandler {
 
-  private val uniqueNumber = (1 to Int.MaxValue) iterator
-
-  def createTaskWith(agentID: AgentID, dockerEntity: DockerEntity): TaskInfo = {
-    val taskID: TaskID = createNexTaskID
-    val dockerInfo: DockerInfo = createDockerInfo(dockerEntity.image)
+  def createTaskWith(agentID: AgentID, bean: Bean): TaskInfo = {
+    val taskID: TaskID = createTaskID(bean.taskId)
+    val dockerInfo: DockerInfo = createDockerInfo(bean.dockerEntity.image)
     val containerInfo: ContainerInfo = createContainerInfo(dockerInfo)
-    createDockerTask(taskID, agentID, containerInfo, dockerEntity)
+    createDockerTask(taskID, agentID, containerInfo, bean.dockerEntity)
   }
 
-  private def createNexTaskID: TaskID =
+  private def createTaskID(taskId: String): TaskID =
     TaskID.newBuilder
-      .setValue((uniqueNumber next) toString)
+      .setValue(taskId)
       .build
 
   private def createDockerInfo(image: String): DockerInfo =

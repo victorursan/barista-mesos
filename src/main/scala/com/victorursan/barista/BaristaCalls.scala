@@ -1,7 +1,6 @@
 package com.victorursan.barista
 
 import java.net.URI
-import java.util
 import java.util.function.Function
 import java.util.{Optional, UUID}
 
@@ -9,9 +8,8 @@ import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, SchedulerCalls}
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
-import com.victorursan.mesos.{MesosSchedulerCallbacks, MesosSchedulerCalls}
-import com.victorursan.state.DockerEntity
-import com.victorursan.utils.Config
+import com.victorursan.mesos.MesosSchedulerCalls
+import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{FrameworkID, Offer}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
@@ -40,7 +38,6 @@ object BaristaCalls extends MesosSchedulerCalls {
     val clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos
       .mesosUri(mesosMaster)
       .applicationUserAgentEntry(applicationUserAgentEntry)
-
     val subscribeCall: Call = SchedulerCalls.subscribe(
       frameworkID,
       Protos.FrameworkInfo.newBuilder()
@@ -116,22 +113,18 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setTaskId(taskId)
         .setUuid(uuid)), ACKNOWLEDGE)
 
-  //    sendCall(Call.newBuilder().setAccept(
-  //      filtersOpt match {
-  //        case Some(filters) => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava).setFilters(filters)
-  //        case _ => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava)
-  //      }
-  //    ), ACCEPT)
+  def acceptContainer(bean: Bean, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit =
+    acceptContainers(bean, offerIds, List(agentId), filtersOpt)
 
-  def acceptContainer(dockerEntity: DockerEntity, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit =
-    this.accept(offerIds, List(
-    Offer.Operation.newBuilder()
-      .setType(Offer.Operation.Type.LAUNCH)
-      .setLaunch(
-        Offer.Operation.Launch.newBuilder
-          .addAllTaskInfos(List(TaskHandler.createTaskWith(agentId, dockerEntity)).asJava))
-      .build()),
-    filtersOpt)
+  def acceptContainers(bean: Bean, offerIds: List[Protos.OfferID], agentIds: List[Protos.AgentID], filtersOpt: Option[Protos.Filters] = None): Unit =
+    accept(offerIds, List(
+      Offer.Operation.newBuilder()
+        .setType(Offer.Operation.Type.LAUNCH)
+        .setLaunch(
+          Offer.Operation.Launch.newBuilder
+            .addAllTaskInfos(agentIds.map(TaskHandler.createTaskWith(_, bean)).asJava))
+        .build()),
+      filtersOpt)
 
   override def accept(offerIds: List[Protos.OfferID], offerOperations: List[Offer.Operation], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAccept(
@@ -151,18 +144,6 @@ object BaristaCalls extends MesosSchedulerCalls {
       }
     ), DECLINE)
 
-  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
-    sendCall(callBuilder.setType(callType)
-      .setFrameworkId(frameworkID)
-      .build)
-
-  private def sendCall(call: Call): Unit = {
-    if (publishSubject == null) {
-      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
-    }
-    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
-  }
-
   override def acceptInverseOffers(offerIds: List[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAcceptInverseOffers(
       filtersOpt match {
@@ -180,9 +161,9 @@ object BaristaCalls extends MesosSchedulerCalls {
   override def kill(taskId: Protos.TaskID, agentIdOpt: Option[Protos.AgentID] = None, killPolicyOpt: Option[Protos.KillPolicy] = None): Unit =
     sendCall(Call.newBuilder().setKill({
       (agentIdOpt, killPolicyOpt) match {
+        case (Some(agentId), Some(killPolicy)) => Kill.newBuilder.setTaskId(taskId).setAgentId(agentId).setKillPolicy(killPolicy)
         case (Some(agentId), None) => Kill.newBuilder.setTaskId(taskId).setAgentId(agentId)
         case (None, Some(killPolicy)) => Kill.newBuilder.setTaskId(taskId).setKillPolicy(killPolicy)
-        case (Some(agentId), Some(killPolicy)) => Kill.newBuilder.setTaskId(taskId).setAgentId(agentId).setKillPolicy(killPolicy)
         case _ => Kill.newBuilder.setTaskId(taskId)
       }
     }), KILL)
@@ -213,6 +194,18 @@ object BaristaCalls extends MesosSchedulerCalls {
     sendCall(Call.newBuilder()
       .setRequest(Request.newBuilder
         .addAllRequests(requests.asJava)), REQUEST)
+
+  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
+    sendCall(callBuilder.setType(callType)
+      .setFrameworkId(frameworkID)
+      .build)
+
+  private def sendCall(call: Call): Unit = {
+    if (publishSubject == null) {
+      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
+    }
+    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
+  }
 
   override def close(): Unit = {
     if (openStream != null && !openStream.isUnsubscribed) {
