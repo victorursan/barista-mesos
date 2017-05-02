@@ -5,6 +5,7 @@ import java.lang.management.ManagementFactory
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
 import com.victorursan.state.DockerEntity
+import com.victorursan.utils.Config
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,7 +16,7 @@ import scala.language.postfixOps
 /**
   * Created by victor on 4/2/17.
   */
-trait BaristaService extends BaseService {
+trait BaristaService extends BaseService with Config {
   private val log = LoggerFactory.getLogger(classOf[BaristaService])
   private val baristaController: BaristaController = new BaristaController
   protected val serviceName = "BaristaService"
@@ -33,27 +34,28 @@ trait BaristaService extends BaseService {
     } ~ path("stop") {
       post {
         log.info("[POST] /stop executed")
-        //        baristaController.stop()
-
         complete {
-          System.exit(0)
-          ""
+          baristaController.teardown()
         }
       }
     } ~ pathPrefix("api") {
-      path("task") {
-        post {
+      pathPrefix("task") {
+        path("add") {
           log.info("[POST] /api/task launching a new entity")
           entity(as[DockerEntity]) { dockerEntity =>
             complete(baristaController.launchDockerEntity(dockerEntity))
+          }
+        } ~ path("kill") {
+          post {
+            entity(as[String]) { taskId =>
+              complete(baristaController.killTask(taskId))
+            }
           }
         }
       } ~ path("overview") {
         get {
           log.info("[GET] /api/overview launching a new entity")
-          entity(as[DockerEntity]) { dockerEntity =>
-            complete(baristaController.launchDockerEntity(dockerEntity))
-          }
+          complete(baristaController.stateOverview())
         }
       }
     }

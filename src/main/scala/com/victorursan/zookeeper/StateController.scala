@@ -93,7 +93,7 @@ object StateController extends JsonSupport with State {
 
   override def addToKill(taskID: TaskID): Set[TaskID] = {
     val newTasksKill = tasksToKill + taskID
-    CuratorService.createOrUpdate(awaitingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
     newTasksKill
   }
 
@@ -101,7 +101,7 @@ object StateController extends JsonSupport with State {
 
   override def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID] = {
     val newTasksKill = tasksToKill diff taskIDs
-    CuratorService.createOrUpdate(awaitingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
     newTasksKill
   }
 

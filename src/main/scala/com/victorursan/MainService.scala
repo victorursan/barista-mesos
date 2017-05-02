@@ -9,8 +9,8 @@ import com.victorursan.utils.Config
 /**
   * Created by victor on 4/2/17.
   */
-object MainService extends App with BaristaService with Config {
-  override protected implicit val system: ActorSystem = ActorSystem()
+object MainService extends App with Config with BaristaService  {
+  override protected implicit val system: ActorSystem = ActorSystem("Barista-actor-system")
   override protected implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   Http().bindAndHandle(routes, httpInterface, httpPort)
