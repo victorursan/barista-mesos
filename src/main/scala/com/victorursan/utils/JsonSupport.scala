@@ -1,7 +1,7 @@
 package com.victorursan.utils
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.victorursan.state.{Bean, DockerEntity, DockerResource}
+import com.victorursan.state.{Bean, DockerEntity, DockerResource, ScheduledBean}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 /**
@@ -11,4 +11,5 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = jsonFormat2(DockerResource)
   implicit val dockerServiceProtocol: RootJsonFormat[DockerEntity] = jsonFormat4(DockerEntity)
   implicit val beanProtocol: RootJsonFormat[Bean] = jsonFormat2(Bean)
+  implicit val scheduledBeanProtocol: RootJsonFormat[ScheduledBean] = jsonFormat4(ScheduledBean)
 }

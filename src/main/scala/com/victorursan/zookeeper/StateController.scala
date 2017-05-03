@@ -2,7 +2,7 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, DockerEntity}
+import com.victorursan.state.{Bean, DockerEntity, ScheduledBean}
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
@@ -15,6 +15,7 @@ import scala.util.Try
 object StateController extends JsonSupport with State {
   private val basePath = "/barista/state"
   private val awaitingPath = s"$basePath/awaiting"
+  private val runningPath = s"$basePath/running"
   private val historyAwaitingPath = s"$basePath/historyAwaiting"
   private val nextIdPath = s"$basePath/nextId"
   private val killingPath = s"$basePath/killing"
@@ -63,6 +64,30 @@ object StateController extends JsonSupport with State {
     newOldBeans
   }
 
+  def addToRunning(bean: ScheduledBean): Set[ScheduledBean] = addToRunning(Set(bean))
+
+
+  def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+    val newRunning = running ++ beans
+    CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
+
+  def running: Set[ScheduledBean] =
+    Try(new String(CuratorService.read(runningPath))
+      .parseJson
+      .convertTo[Set[ScheduledBean]])
+      .getOrElse(Set())
+
+  def removeRunning(bean: ScheduledBean): Set[ScheduledBean] = removeRunning(Set(bean))
+
+  def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+    val oldRunning = running
+    val newRunning = oldRunning ++ (beans diff oldRunning)
+    CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
+
   override def addToAccept(dockerEntity: DockerEntity): Set[Bean] = {
     val nextId: String = getNextId
     val newBeans: Set[Bean] = awaitingBeans + Bean(dockerEntity = dockerEntity, taskId = nextId)
@@ -79,8 +104,7 @@ object StateController extends JsonSupport with State {
   override def removeFromAccept(bean: Bean): Set[Bean] = removeFromAccept(Set(bean))
 
   override def removeFromAccept(beans: Set[Bean]): Set[Bean] = {
-    val newBeans = awaitingBeans.diff(beans)
-    addToOldBeans(beans)
+    val newBeans = awaitingBeans diff beans
     CuratorService.createOrUpdate(awaitingPath, newBeans.toJson.toString().getBytes)
     newBeans
   }

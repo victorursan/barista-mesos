@@ -4,7 +4,7 @@ version := "1.0"
 
 mainClass := Some("com.victor.Main")
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.2"
 updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 resolvers ++= Seq(

@@ -9,9 +9,9 @@ import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, Schedu
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.MesosSchedulerCalls
-import com.victorursan.state.Bean
+import com.victorursan.state.{Bean, ScheduledBean}
 import org.apache.mesos.v1.Protos
-import org.apache.mesos.v1.Protos.{FrameworkID, Offer}
+import org.apache.mesos.v1.Protos.{AgentID, FrameworkID, Offer, OfferID}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
 import org.apache.mesos.v1.scheduler.Protos.Call.{Accept, AcceptInverseOffers, Acknowledge, Decline, DeclineInverseOffers, Kill, Message, Reconcile, Request, Shutdown}
 import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
@@ -113,18 +113,25 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setTaskId(taskId)
         .setUuid(uuid)), ACKNOWLEDGE)
 
-  def acceptContainer(bean: Bean, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit =
-    acceptContainers(bean, offerIds, List(agentId), filtersOpt)
-
-  def acceptContainers(bean: Bean, offerIds: List[Protos.OfferID], agentIds: List[Protos.AgentID], filtersOpt: Option[Protos.Filters] = None): Unit =
-    accept(offerIds, List(
+  def acceptContainer(bean: ScheduledBean, filtersOpt: Option[Protos.Filters] = None): Unit =
+    accept(List(createOfferId(bean.offerId)), List(
       Offer.Operation.newBuilder()
         .setType(Offer.Operation.Type.LAUNCH)
         .setLaunch(
           Offer.Operation.Launch.newBuilder
-            .addAllTaskInfos(agentIds.map(TaskHandler.createTaskWith(_, bean)).asJava))
+            .addAllTaskInfos(List(createAgentId(bean.agentId)).map(TaskHandler.createTaskWith(_, bean)).asJava))
         .build()),
       filtersOpt)
+
+  private def createAgentId(agentId: String): AgentID =
+    AgentID.newBuilder
+      .setValue(agentId)
+      .build
+
+  private def createOfferId(offerId: String): OfferID =
+    OfferID.newBuilder
+      .setValue(offerId)
+      .build
 
   override def accept(offerIds: List[Protos.OfferID], offerOperations: List[Offer.Operation], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAccept(
@@ -136,7 +143,7 @@ object BaristaCalls extends MesosSchedulerCalls {
 
   override def teardown(): Unit = sendCall(Call.newBuilder(), TEARDOWN)
 
-  override def decline(offerIds: List[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
+  override def decline(offerIds: Iterable[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setDecline(
       filtersOpt match {
         case Some(filters) => Decline.newBuilder.addAllOfferIds(offerIds.asJava).setFilters(filters)

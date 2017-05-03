@@ -5,7 +5,7 @@ import java.util.function.Function
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
-import com.victorursan.state.Bean
+import com.victorursan.state.{Bean, ScheduledBean}
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.Offer.Operation
 import org.apache.mesos.v1.Protos._
@@ -19,13 +19,11 @@ trait MesosSchedulerCalls {
 
   def teardown(): Unit
 
-  def acceptContainer(bean: Bean, offerIds: List[Protos.OfferID], agentId: Protos.AgentID, filtersOpt: Option[Protos.Filters] = None): Unit
-
-  def acceptContainers(bean: Bean, offerIds: List[Protos.OfferID], agentIds: List[Protos.AgentID], filtersOpt: Option[Protos.Filters] = None): Unit
+  def acceptContainer(bean: ScheduledBean, filtersOpt: Option[Protos.Filters] = None): Unit
 
   def accept(offerIds: List[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
 
-  def decline(offerIds: List[OfferID], filtersOpt: Option[Filters] = None): Unit
+  def decline(offerIds: Iterable[OfferID], filtersOpt: Option[Filters] = None): Unit
 
   def acceptInverseOffers(offerIds: List[OfferID], filtersOpt: Option[Filters] = None): Unit
 

@@ -1,32 +1,27 @@
 package com.victorursan.barista
 
 import com.victorursan.mesos.MesosSchedulerCallbacks
+import com.victorursan.state.{Bean, ScheduleState}
+import com.victorursan.utils.JsonSupport
 import com.victorursan.zookeeper.StateController
-import org.apache.mesos.v1.Protos.{InverseOffer, Offer, OfferID, TaskStatus}
+import org.apache.mesos.v1.Protos._
 import org.apache.mesos.v1.scheduler.Protos.Event.{Error, Failure, Message, Subscribed}
 
 /**
   * Created by victor on 4/10/17.
   */
-object BaristaCallbacks extends MesosSchedulerCallbacks {
+object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedSubscribed(subscribed: Subscribed): Unit = print(subscribed)
 
   override def receivedOffers(offers: List[Offer]): Unit = {
     val beans = StateController.awaitingBeans
-    if (beans.nonEmpty) {
-      val bean = beans.head
-      val acceptableOffers = for (offer <- offers) yield offer
+    val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers)
+    scheduledBeans.foreach(BaristaCalls.acceptContainer(_))
+    StateController.addToRunning(scheduledBeans)
+    StateController.removeFromAccept(consumedBeans)
 
-      BaristaCalls.acceptContainers(bean, acceptableOffers.map(_.getId), acceptableOffers.map(_.getAgentId))
-      StateController.removeFromAccept(bean)
-
-      val nonAcceptableOffers = offers diff acceptableOffers
-      BaristaCalls.decline(nonAcceptableOffers.map(_.getId))
-    } else {
-      print(offers)
-      BaristaCalls.decline(offers.map(_.getId))
-    }
+    BaristaCalls.decline(canceledOffers.map(_.getId))
   }
 
   override def receivedInverseOffers(offers: List[InverseOffer]): Unit = print(offers)
