@@ -33,6 +33,7 @@ class BaristaController extends JsonSupport {
     StateController.running.toJson
 
   def killTask(taskId: String): JsValue  = {
+    StateController.running.find(_.taskId.equalsIgnoreCase(taskId)).foreach(StateController.removeRunning)
     val tasks = StateController.addToKill(TaskID.newBuilder().setValue(taskId).build())
     for(task <- tasks) {
       BaristaCalls.kill(task)

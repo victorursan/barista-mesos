@@ -5,7 +5,7 @@ import java.util.function.Function
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
-import com.victorursan.state.{Bean, ScheduledBean}
+import com.victorursan.state.ScheduledBean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.Offer.Operation
 import org.apache.mesos.v1.Protos._
@@ -37,7 +37,7 @@ trait MesosSchedulerCalls {
 
   def acknowledge(agentId: AgentID, taskId: TaskID, uuid: ByteString): Unit
 
-  def reconsile(tasks: List[Reconcile.Task]): Unit
+  def reconsile(tasks: Iterable[Reconcile.Task]): Unit
 
   def message(agentId: AgentID, executorId: ExecutorID, data: ByteString): Unit
 

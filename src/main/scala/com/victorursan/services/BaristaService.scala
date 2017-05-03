@@ -46,7 +46,7 @@ trait BaristaService extends BaseService with Config {
           }
         } ~ path("kill") {
           post {
-            log.info("[POST] /api/task/kill killing the entitiy")
+            log.info("[POST] /api/task/kill killing the entity")
             entity(as[String]) { taskId =>
               complete(baristaController.killTask(taskId))
             }

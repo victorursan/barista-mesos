@@ -184,7 +184,7 @@ object BaristaCalls extends MesosSchedulerCalls {
       }
     }), SHUTDOWN)
 
-  override def reconsile(tasks: List[Reconcile.Task]): Unit =
+  override def reconsile(tasks: Iterable[Reconcile.Task]): Unit =
     sendCall(Call.newBuilder()
       .setReconcile(Reconcile.newBuilder
         .addAllTasks(tasks.asJava)), RECONCILE)
