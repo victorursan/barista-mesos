@@ -17,10 +17,9 @@ import scala.language.postfixOps
   * Created by victor on 4/2/17.
   */
 trait BaristaService extends BaseService with Config {
+  protected val serviceName = "BaristaService"
   private val log = LoggerFactory.getLogger(classOf[BaristaService])
   private val baristaController: BaristaController = new BaristaController
-  protected val serviceName = "BaristaService"
-
   Future {
     baristaController.start()
   }
@@ -41,31 +40,29 @@ trait BaristaService extends BaseService with Config {
     } ~ pathPrefix("api") {
       pathPrefix("task") {
         path("add") {
-          log.info("[POST] /api/task launching a new entity")
+          log.info("[POST] /api/task/add launching a new entity")
           entity(as[DockerEntity]) { dockerEntity =>
             complete(baristaController.launchDockerEntity(dockerEntity))
           }
         } ~ path("kill") {
           post {
+            log.info("[POST] /api/task/kill killing the entitiy")
             entity(as[String]) { taskId =>
               complete(baristaController.killTask(taskId))
             }
           }
+        } ~ path("running") {
+          get {
+            log.info("[GET] /api/task/running getting all tasks that should run")
+            complete(baristaController.runningTasks())
+          }
         }
       } ~ path("overview") {
         get {
-          log.info("[GET] /api/overview launching a new entity")
+          log.info("[GET] /api/overview an overview")
           complete(baristaController.stateOverview())
         }
       }
     }
-  //  ~ path("leader") {
-  //
-  //      complete {
-  //        Future {
-  //          Leader.get()
-  //            .flatMap { uri => Future { uri.path.toString() } }
-  //        }
-  //      }
-  //    }
+
 }

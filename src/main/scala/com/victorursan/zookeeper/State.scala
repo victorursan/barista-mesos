@@ -1,6 +1,6 @@
 package com.victorursan.zookeeper
 
-import com.victorursan.state.{Bean, DockerEntity}
+import com.victorursan.state.{Bean, DockerEntity, ScheduledBean}
 import org.apache.mesos.v1.Protos.TaskID
 
 /**
@@ -24,6 +24,26 @@ trait State {
   def removeFromAccept(bean: Bean): Set[Bean]
 
   def removeFromAccept(beans: Set[Bean]): Set[Bean]
+
+  def addToRunning(bean: ScheduledBean): Set[ScheduledBean]
+
+  def addToOldBeans(bean: Bean): Set[Bean]
+
+  def addToOldBeans(beans: Set[Bean]): Set[Bean]
+
+  def oldBeans: Set[Bean]
+
+  def removeOldBean(bean: Bean): Set[Bean]
+
+  def removeOldBean(beans: Set[Bean]): Set[Bean]
+
+  def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean]
+
+  def running: Set[ScheduledBean]
+
+  def removeRunning(bean: ScheduledBean): Set[ScheduledBean]
+
+  def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean]
 
   def addToKill(taskID: TaskID): Set[TaskID]
 

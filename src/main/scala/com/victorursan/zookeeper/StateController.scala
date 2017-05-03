@@ -40,48 +40,46 @@ object StateController extends JsonSupport with State {
     newOverview
   }
 
-  def addToOldBeans(bean: Bean): Set[Bean] = addToOldBeans(Set(bean))
+  override def addToOldBeans(bean: Bean): Set[Bean] = addToOldBeans(Set(bean))
 
-
-  def addToOldBeans(beans: Set[Bean]): Set[Bean] = {
+  override def addToOldBeans(beans: Set[Bean]): Set[Bean] = {
     val newOldBeans = oldBeans ++ beans
     CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
     newOldBeans
   }
 
-  def oldBeans: Set[Bean] =
+  override def oldBeans: Set[Bean] =
     Try(new String(CuratorService.read(historyAwaitingPath))
       .parseJson
       .convertTo[Set[Bean]])
       .getOrElse(Set())
 
-  def removeOldBean(bean: Bean): Set[Bean] = removeOldBean(Set(bean))
+  override def removeOldBean(bean: Bean): Set[Bean] = removeOldBean(Set(bean))
 
-  def removeOldBean(beans: Set[Bean]): Set[Bean] = {
+  override def removeOldBean(beans: Set[Bean]): Set[Bean] = {
     val localOldBeans = oldBeans
     val newOldBeans = localOldBeans ++ (beans diff localOldBeans)
     CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
     newOldBeans
   }
 
-  def addToRunning(bean: ScheduledBean): Set[ScheduledBean] = addToRunning(Set(bean))
+  override def addToRunning(bean: ScheduledBean): Set[ScheduledBean] = addToRunning(Set(bean))
 
-
-  def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+  override def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
     val newRunning = running ++ beans
     CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
 
-  def running: Set[ScheduledBean] =
+  override def running: Set[ScheduledBean] =
     Try(new String(CuratorService.read(runningPath))
       .parseJson
       .convertTo[Set[ScheduledBean]])
       .getOrElse(Set())
 
-  def removeRunning(bean: ScheduledBean): Set[ScheduledBean] = removeRunning(Set(bean))
+  override def removeRunning(bean: ScheduledBean): Set[ScheduledBean] = removeRunning(Set(bean))
 
-  def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+  override def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
     val oldRunning = running
     val newRunning = oldRunning ++ (beans diff oldRunning)
     CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)

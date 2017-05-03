@@ -21,7 +21,7 @@ trait MesosSchedulerCalls {
 
   def acceptContainer(bean: ScheduledBean, filtersOpt: Option[Protos.Filters] = None): Unit
 
-  def accept(offerIds: List[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
+  def accept(offerIds: Iterable[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
 
   def decline(offerIds: Iterable[OfferID], filtersOpt: Option[Filters] = None): Unit
 

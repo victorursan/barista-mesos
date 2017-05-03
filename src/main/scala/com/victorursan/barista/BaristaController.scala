@@ -29,6 +29,9 @@ class BaristaController extends JsonSupport {
   def stateOverview(): String =
     StateController.getOverview mkString ","
 
+  def runningTasks(): JsValue =
+    StateController.running.toJson
+
   def killTask(taskId: String): JsValue  = {
     val tasks = StateController.addToKill(TaskID.newBuilder().setValue(taskId).build())
     for(task <- tasks) {

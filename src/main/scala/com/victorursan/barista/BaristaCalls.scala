@@ -33,7 +33,6 @@ object BaristaCalls extends MesosSchedulerCalls {
     .build()
   private var openStream: AwaitableSubscription = null
 
-  //
   override def subscribe(mesosMaster: URI, frameworkName: String, failoverTimeout: Double, mesosRole: String, applicationUserAgentEntry: Function[Class[_], UserAgentEntry], frameworkId: String): Unit = {
     val clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos
       .mesosUri(mesosMaster)
@@ -133,7 +132,7 @@ object BaristaCalls extends MesosSchedulerCalls {
       .setValue(offerId)
       .build
 
-  override def accept(offerIds: List[Protos.OfferID], offerOperations: List[Offer.Operation], filtersOpt: Option[Protos.Filters] = None): Unit =
+  override def accept(offerIds: Iterable[Protos.OfferID], offerOperations: List[Offer.Operation], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setAccept(
       filtersOpt match {
         case Some(filters) => Accept.newBuilder.addAllOfferIds(offerIds.asJava).addAllOperations(offerOperations.asJava).setFilters(filters)
