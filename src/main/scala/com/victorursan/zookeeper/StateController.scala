@@ -132,4 +132,6 @@ object StateController extends JsonSupport with State {
         .setValue(_)
         .build()))
       .getOrElse(Set())
+
+  def clean(): Unit = CuratorService.delete(basePath)
 }

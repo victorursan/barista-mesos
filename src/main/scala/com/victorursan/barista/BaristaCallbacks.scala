@@ -44,15 +44,16 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedUpdate(update: TaskStatus): Unit = {
     print(update.toString)
-    val runningTasks = StateController.running
     if (update.hasTaskId && update.hasState) {
       val taskId = update.getTaskId.getValue
       update.getState match {
         case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
-          runningTasks.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+          StateController.running.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             StateController.addToAccept(scheduledBean) // todo
             StateController.removeRunning(scheduledBean)
           })
+        case TaskState.TASK_KILLED =>
+          StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)
         case _ => print("something \n\n\n\n\n\n\n\n\n")
       }
       print(StateController.addToOverview(taskId, update.toString).toString())

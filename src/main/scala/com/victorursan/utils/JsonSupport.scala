@@ -44,7 +44,6 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
             case partialTaskIdRegex(taskId) => Bean(id = taskId, name = name, dockerEntity = dockerEntity, pack = None, agentId = agentIdOpt, offerId = offerIdOpt)
             case _ => Bean(id = rawTask, name = name, dockerEntity = dockerEntity, agentId = agentIdOpt, offerId = offerIdOpt) // todo this should be logged, not normal
           }
-
         }
         case other => deserializationError("Cannot deserialize Bean: invalid input. Raw input: " + other)
       }

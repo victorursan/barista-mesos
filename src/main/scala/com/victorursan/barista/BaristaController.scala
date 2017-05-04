@@ -46,6 +46,7 @@ class BaristaController extends JsonSupport {
 
   def teardown(): String  = {
     BaristaCalls.teardown()
+    StateController.clean()
     "We are closed"
   }
 }
