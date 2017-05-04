@@ -1,6 +1,6 @@
 package com.victorursan.barista
 
-import com.victorursan.state.{Bean, ScheduleState, ScheduledBean}
+import com.victorursan.state.{Bean, ScheduleState}
 import org.apache.mesos.v1.Protos.Offer
 
 import scala.collection.JavaConverters._
@@ -12,13 +12,13 @@ object BaristaScheduler {
 
   def scheduleBeans(beans: Set[Bean], offers: List[Offer]): ScheduleState = {
     var remainningOffers = offers
-    var acceptOffers = Set[ScheduledBean]()
+    var acceptOffers = Set[Bean]()
     var scheduledBeans = Set[Bean]()
     for (bean <- beans) {
       scheduleBean(bean, remainningOffers).foreach(offer => {
         remainningOffers = remainningOffers.filterNot(_.equals(offer))
         scheduledBeans = scheduledBeans + bean
-        acceptOffers = acceptOffers + bean.schedule(offer.getAgentId.getValue, offer.getId.getValue)
+        acceptOffers = acceptOffers + bean.copy(agentId = Some(offer.getAgentId.getValue), offerId = Some(offer.getId.getValue))
       })
     }
     ScheduleState(acceptOffers, remainningOffers, scheduledBeans)

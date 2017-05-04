@@ -1,6 +1,6 @@
 package com.victorursan.zookeeper
 
-import com.victorursan.state.{Bean, DockerEntity, ScheduledBean}
+import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos.TaskID
 
 /**
@@ -19,13 +19,13 @@ trait State {
 
   def tasksToKill: Set[TaskID]
 
-  def addToAccept(dockerEntity: DockerEntity): Set[Bean]
+  def addToAccept(bean: Bean): Set[Bean]
 
   def removeFromAccept(bean: Bean): Set[Bean]
 
   def removeFromAccept(beans: Set[Bean]): Set[Bean]
 
-  def addToRunning(bean: ScheduledBean): Set[ScheduledBean]
+  def addToRunning(bean: Bean): Set[Bean]
 
   def addToOldBeans(bean: Bean): Set[Bean]
 
@@ -37,13 +37,13 @@ trait State {
 
   def removeOldBean(beans: Set[Bean]): Set[Bean]
 
-  def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean]
+  def addToRunning(beans: Set[Bean]): Set[Bean]
 
-  def running: Set[ScheduledBean]
+  def running: Set[Bean]
 
-  def removeRunning(bean: ScheduledBean): Set[ScheduledBean]
+  def removeRunning(bean: Bean): Set[Bean]
 
-  def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean]
+  def removeRunning(beans: Set[Bean]): Set[Bean]
 
   def addToKill(taskID: TaskID): Set[TaskID]
 

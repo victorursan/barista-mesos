@@ -9,7 +9,7 @@ import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, Schedu
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.MesosSchedulerCalls
-import com.victorursan.state.{Bean, ScheduledBean}
+import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{AgentID, FrameworkID, Offer, OfferID}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
@@ -112,13 +112,13 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setTaskId(taskId)
         .setUuid(uuid)), ACKNOWLEDGE)
 
-  def acceptContainer(bean: ScheduledBean, filtersOpt: Option[Protos.Filters] = None): Unit =
-    accept(List(createOfferId(bean.offerId)), List(
+  def acceptContainer(bean: Bean, filtersOpt: Option[Protos.Filters] = None): Unit =
+    accept(List(createOfferId(bean.offerId.get)), List(//todo remove the bean.offerId.get
       Offer.Operation.newBuilder()
         .setType(Offer.Operation.Type.LAUNCH)
         .setLaunch(
           Offer.Operation.Launch.newBuilder
-            .addAllTaskInfos(List(createAgentId(bean.agentId)).map(TaskHandler.createTaskWith(_, bean)).asJava))
+            .addAllTaskInfos(List(createAgentId(bean.agentId.get)).map(TaskHandler.createTaskWith(_, bean)).asJava)) //todo remove the bean.agentId.get
         .build()),
       filtersOpt)
 
@@ -141,6 +141,18 @@ object BaristaCalls extends MesosSchedulerCalls {
     ), ACCEPT)
 
   override def teardown(): Unit = sendCall(Call.newBuilder(), TEARDOWN)
+
+  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
+    sendCall(callBuilder.setType(callType)
+      .setFrameworkId(frameworkID)
+      .build)
+
+  private def sendCall(call: Call): Unit = {
+    if (publishSubject == null) {
+      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
+    }
+    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
+  }
 
   override def decline(offerIds: Iterable[Protos.OfferID], filtersOpt: Option[Protos.Filters] = None): Unit =
     sendCall(Call.newBuilder().setDecline(
@@ -200,18 +212,6 @@ object BaristaCalls extends MesosSchedulerCalls {
     sendCall(Call.newBuilder()
       .setRequest(Request.newBuilder
         .addAllRequests(requests.asJava)), REQUEST)
-
-  private def sendCall(callBuilder: Call.Builder, callType: Call.Type): Unit =
-    sendCall(callBuilder.setType(callType)
-      .setFrameworkId(frameworkID)
-      .build)
-
-  private def sendCall(call: Call): Unit = {
-    if (publishSubject == null) {
-      throw new RuntimeException("No publisher found, please call subscribe before sending anything.")
-    }
-    publishSubject.onNext(Optional.of(SinkOperations.create(call)))
-  }
 
   override def close(): Unit = {
     if (openStream != null && !openStream.isUnsubscribed) {

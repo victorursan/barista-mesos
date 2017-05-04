@@ -20,7 +20,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     BaristaCalls.reconsile(StateController.running.map(scheduledBean => {
       Task.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(scheduledBean.taskId).build())
-        .setAgentId(AgentID.newBuilder().setValue(scheduledBean.agentId).build())
+        .setAgentId(AgentID.newBuilder().setValue(scheduledBean.agentId.get).build()) //todo fix scheduledBean.agentId.get
         .build()
     }))
   }
@@ -50,12 +50,12 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
       update.getState match {
         case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
           runningTasks.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
-            StateController.addToAccept(scheduledBean.dockerEntity)
+            StateController.addToAccept(scheduledBean) // todo
             StateController.removeRunning(scheduledBean)
           })
         case _ => log.info("something \n\n\n\n\n\n\n\n\n")
       }
-      val overview = StateController.addToOverview(taskId, update.toString)
+      log.info(StateController.addToOverview(taskId, update.toString).toString())
     }
   }
 

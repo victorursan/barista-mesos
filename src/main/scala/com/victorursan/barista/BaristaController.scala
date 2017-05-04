@@ -4,11 +4,10 @@ import java.net.URI
 import java.util.UUID
 
 import com.mesosphere.mesos.rx.java.util.UserAgentEntries
-import com.victorursan.state.DockerEntity
+import com.victorursan.state.{Bean, DockerEntity}
 import com.victorursan.utils.JsonSupport
 import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos.TaskID
-
 import spray.json._
 
 /**
@@ -23,8 +22,10 @@ class BaristaController extends JsonSupport {
   def start(): Unit =
     BaristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
 
-  def launchDockerEntity(dockerEntity: DockerEntity): JsValue =
-    StateController.addToAccept(dockerEntity) toJson
+  def launchDockerEntity(dockerEntity: DockerEntity): JsValue = {
+    val taskId = StateController.getNextId
+    StateController.addToAccept(Bean(taskId, dockerEntity)) toJson
+  }
 
   def stateOverview(): String =
     StateController.getOverview mkString ","
@@ -35,6 +36,7 @@ class BaristaController extends JsonSupport {
   def killTask(taskId: String): JsValue  = {
     StateController.running.find(_.taskId.equalsIgnoreCase(taskId)).foreach(StateController.removeRunning)
     val tasks = StateController.addToKill(TaskID.newBuilder().setValue(taskId).build())
+//    StateController.removeRunning() todo remove from running
     for(task <- tasks) {
       BaristaCalls.kill(task)
     }

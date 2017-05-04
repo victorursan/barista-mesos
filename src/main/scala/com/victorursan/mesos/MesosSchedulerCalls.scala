@@ -5,7 +5,7 @@ import java.util.function.Function
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.util.UserAgentEntry
-import com.victorursan.state.ScheduledBean
+import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.Offer.Operation
 import org.apache.mesos.v1.Protos._
@@ -19,7 +19,7 @@ trait MesosSchedulerCalls {
 
   def teardown(): Unit
 
-  def acceptContainer(bean: ScheduledBean, filtersOpt: Option[Protos.Filters] = None): Unit
+  def acceptContainer(bean: Bean, filtersOpt: Option[Protos.Filters] = None): Unit
 
   def accept(offerIds: Iterable[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
 

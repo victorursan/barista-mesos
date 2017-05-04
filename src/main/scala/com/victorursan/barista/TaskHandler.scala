@@ -1,6 +1,6 @@
 package com.victorursan.barista
 
-import com.victorursan.state.{DockerEntity, ScheduledBean}
+import com.victorursan.state.{Bean, DockerEntity}
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.v1.Protos._
 
@@ -11,7 +11,7 @@ import scala.language.postfixOps
   */
 object TaskHandler {
 
-  def createTaskWith(agentID: AgentID, bean: ScheduledBean): TaskInfo = {
+  def createTaskWith(agentID: AgentID, bean: Bean): TaskInfo = {
     val taskID: TaskID = createTaskId(bean.taskId)
     val dockerInfo: DockerInfo = createDockerInfo(bean.dockerEntity.image)
     val containerInfo: ContainerInfo = createContainerInfo(dockerInfo)

@@ -2,7 +2,7 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, DockerEntity, ScheduledBean}
+import com.victorursan.state.{Bean, DockerEntity}
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
@@ -63,32 +63,31 @@ object StateController extends JsonSupport with State {
     newOldBeans
   }
 
-  override def addToRunning(bean: ScheduledBean): Set[ScheduledBean] = addToRunning(Set(bean))
+  override def addToRunning(bean: Bean): Set[Bean] = addToRunning(Set(bean))
 
-  override def addToRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+  override def addToRunning(beans: Set[Bean]): Set[Bean] = {
     val newRunning = running ++ beans
     CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
 
-  override def running: Set[ScheduledBean] =
+  override def running: Set[Bean] =
     Try(new String(CuratorService.read(runningPath))
       .parseJson
-      .convertTo[Set[ScheduledBean]])
+      .convertTo[Set[Bean]])
       .getOrElse(Set())
 
-  override def removeRunning(bean: ScheduledBean): Set[ScheduledBean] = removeRunning(Set(bean))
+  override def removeRunning(bean: Bean): Set[Bean] = removeRunning(Set(bean))
 
-  override def removeRunning(beans: Set[ScheduledBean]): Set[ScheduledBean] = {
+  override def removeRunning(beans: Set[Bean]): Set[Bean] = {
     val oldRunning = running
     val newRunning = oldRunning ++ (beans diff oldRunning)
     CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
 
-  override def addToAccept(dockerEntity: DockerEntity): Set[Bean] = {
-    val nextId: String = getNextId
-    val newBeans: Set[Bean] = awaitingBeans + Bean(dockerEntity = dockerEntity, taskId = nextId)
+  override def addToAccept(bean: Bean): Set[Bean] = {
+    val newBeans: Set[Bean] = awaitingBeans + bean
     CuratorService.createOrUpdate(awaitingPath, newBeans.toJson.toString().getBytes(StandardCharsets.UTF_8))
     newBeans
   }
