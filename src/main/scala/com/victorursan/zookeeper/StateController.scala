@@ -57,8 +57,7 @@ object StateController extends JsonSupport with State {
   override def removeOldBean(bean: Bean): Set[Bean] = removeOldBean(Set(bean))
 
   override def removeOldBean(beans: Set[Bean]): Set[Bean] = {
-    val localOldBeans = oldBeans
-    val newOldBeans = localOldBeans ++ (beans diff localOldBeans)
+    val newOldBeans = oldBeans diff beans
     CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
     newOldBeans
   }
@@ -80,8 +79,7 @@ object StateController extends JsonSupport with State {
   override def removeRunning(bean: Bean): Set[Bean] = removeRunning(Set(bean))
 
   override def removeRunning(beans: Set[Bean]): Set[Bean] = {
-    val oldRunning = running
-    val newRunning = oldRunning ++ (beans diff oldRunning)
+    val newRunning = running diff beans
     CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
     newRunning
   }

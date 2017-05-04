@@ -25,6 +25,7 @@ libraryDependencies ++= {
   val RxScala = "0.26.5"
   val RxJavaMesos = "0.1.2-SNAPSHOT"
   val Curator = "2.12.0"
+  val Specs2 = "3.8.9"
   Seq(
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion withSources() withJavadoc(),
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion withSources() withJavadoc(),
@@ -37,7 +38,9 @@ libraryDependencies ++= {
     "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
     "org.apache.curator" % "curator-framework" % Curator withSources(),
     "org.apache.curator" % "curator-recipes" % Curator withSources(),
-    "org.apache.curator" % "curator-x-discovery" % Curator withSources()
+    "org.apache.curator" % "curator-x-discovery" % Curator withSources(),
+
+  "org.specs2" %% "specs2-core" % Specs2
   )
 }
 

@@ -5,4 +5,4 @@ package com.victorursan.state
   */
 case class DockerResource(cpu: Double, mem: Double)
 
-case class DockerEntity(name: String, image: String, role: String = "*", resource: DockerResource)
+case class DockerEntity(image: String, role: String = "*", resource: DockerResource)

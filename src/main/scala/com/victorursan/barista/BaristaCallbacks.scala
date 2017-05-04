@@ -16,7 +16,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
   private val log = LoggerFactory.getLogger(BaristaCallbacks.getClass)
 
   override def receivedSubscribed(subscribed: Subscribed): Unit = {
-    log.info(subscribed.toString)
+    print(subscribed.toString)
     BaristaCalls.reconsile(StateController.running.map(scheduledBean => {
       Task.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(scheduledBean.taskId).build())
@@ -36,14 +36,14 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     BaristaCalls.decline(canceledOffers.map(_.getId))
   }
 
-  override def receivedInverseOffers(offers: List[InverseOffer]): Unit = log.info(offers.toString())
+  override def receivedInverseOffers(offers: List[InverseOffer]): Unit = print(offers.toString())
 
-  override def receivedRescind(offerId: OfferID): Unit = log.info(offerId.toString)
+  override def receivedRescind(offerId: OfferID): Unit = print(offerId.toString)
 
-  override def receivedRescindInverseOffer(offerId: OfferID): Unit = log.info(offerId.toString)
+  override def receivedRescindInverseOffer(offerId: OfferID): Unit = print(offerId.toString)
 
   override def receivedUpdate(update: TaskStatus): Unit = {
-    log.info(update.toString)
+    print(update.toString)
     val runningTasks = StateController.running
     if (update.hasTaskId && update.hasState) {
       val taskId = update.getTaskId.getValue
@@ -53,9 +53,9 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
             StateController.addToAccept(scheduledBean) // todo
             StateController.removeRunning(scheduledBean)
           })
-        case _ => log.info("something \n\n\n\n\n\n\n\n\n")
+        case _ => print("something \n\n\n\n\n\n\n\n\n")
       }
-      log.info(StateController.addToOverview(taskId, update.toString).toString())
+      print(StateController.addToOverview(taskId, update.toString).toString())
     }
   }
 

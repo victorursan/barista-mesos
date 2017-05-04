@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
-import com.victorursan.state.DockerEntity
+import com.victorursan.state.{DockerEntity, RawBean}
 import com.victorursan.utils.Config
 import org.slf4j.LoggerFactory
 
@@ -41,8 +41,8 @@ trait BaristaService extends BaseService with Config {
       pathPrefix("task") {
         path("add") {
           log.info("[POST] /api/task/add launching a new entity")
-          entity(as[DockerEntity]) { dockerEntity =>
-            complete(baristaController.launchDockerEntity(dockerEntity))
+          entity(as[RawBean]) { rawBean: RawBean =>
+            complete(baristaController.launchRawBean(rawBean))
           }
         } ~ path("kill") {
           post {

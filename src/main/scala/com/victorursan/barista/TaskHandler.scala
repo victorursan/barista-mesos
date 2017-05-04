@@ -15,7 +15,7 @@ object TaskHandler {
     val taskID: TaskID = createTaskId(bean.taskId)
     val dockerInfo: DockerInfo = createDockerInfo(bean.dockerEntity.image)
     val containerInfo: ContainerInfo = createContainerInfo(dockerInfo)
-    createDockerTask(taskID, agentID, containerInfo, bean.dockerEntity)
+    createDockerTask(taskID, agentID, containerInfo, bean.dockerEntity, bean.name)
   }
 
   private def createTaskId(taskId: String): TaskID =
@@ -36,9 +36,9 @@ object TaskHandler {
       .setDocker(dockerInfo)
       .build
 
-  private def createDockerTask(taskID: TaskID, agentID: AgentID, containerInfo: ContainerInfo, dockerEntity: DockerEntity): TaskInfo =
+  private def createDockerTask(taskID: TaskID, agentID: AgentID, containerInfo: ContainerInfo, dockerEntity: DockerEntity, taskName: String): TaskInfo =
     TaskInfo.newBuilder
-      .setName(dockerEntity.name)
+      .setName(taskName)
       .setTaskId(taskID)
       .setAgentId(agentID)
       .addResources(createScalarResource("cpus", dockerEntity.resource.cpu))
