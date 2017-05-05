@@ -11,17 +11,17 @@ import scala.collection.JavaConverters._
 object BaristaScheduler {
 
   def scheduleBeans(beans: Set[Bean], offers: List[Offer]): ScheduleState = {
-    var remainningOffers = offers
+    var remainingOffers = offers
     var acceptOffers = Set[Bean]()
     var scheduledBeans = Set[Bean]()
     for (bean <- beans) {
-      scheduleBean(bean, remainningOffers).foreach(offer => {
-        remainningOffers = remainningOffers.filterNot(_.equals(offer))
+      scheduleBean(bean, remainingOffers).foreach(offer => {
+        remainingOffers = remainingOffers.filterNot(_.equals(offer))
         scheduledBeans = scheduledBeans + bean
         acceptOffers = acceptOffers + bean.copy(agentId = Some(offer.getAgentId.getValue), offerId = Some(offer.getId.getValue))
       })
     }
-    ScheduleState(acceptOffers, remainningOffers, scheduledBeans)
+    ScheduleState(acceptOffers, remainingOffers, scheduledBeans)
   }
 
   private def scheduleBean(bean: Bean, offers: List[Offer]): Option[Offer] =

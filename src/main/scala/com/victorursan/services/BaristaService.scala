@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
-import com.victorursan.state.{DockerEntity, RawBean}
+import com.victorursan.state.{Pack, RawBean}
 import com.victorursan.utils.Config
 import org.slf4j.LoggerFactory
 
@@ -39,10 +39,15 @@ trait BaristaService extends BaseService with Config {
       }
     } ~ pathPrefix("api") {
       pathPrefix("task") {
-        path("add") {
-          log.info("[POST] /api/task/add launching a new entity")
+        path("bean" / "add") {
+          log.info("[POST] /api/task/bean/add launching a new bean")
           entity(as[RawBean]) { rawBean: RawBean =>
             complete(baristaController.launchRawBean(rawBean))
+          }
+        } ~ path("pack" / "add") {
+          log.info("[POST] /api/task/pack/add launching a new pack")
+          entity(as[Pack]) { pack: Pack =>
+            complete(baristaController.launchPack(pack))
           }
         } ~ path("kill") {
           post {
@@ -51,10 +56,20 @@ trait BaristaService extends BaseService with Config {
               complete(baristaController.killTask(taskId))
             }
           }
-        } ~ path("running") {
+        } ~ path("running" / "unpacked") {
           get {
             log.info("[GET] /api/task/running getting all tasks that should run")
-            complete(baristaController.runningTasks())
+            complete(baristaController.runningUnpackedTasks())
+          }
+        } ~ path("running" / "packed") {
+          get {
+            log.info("[GET] /api/task/running getting all tasks that should run")
+            complete(baristaController.runningUnpackedTasks())
+          }
+        } ~ path("running" / "count") {
+          get {
+            log.info("[GET] /api/task/running/count getting all tasks that should run")
+            complete(baristaController.runningTasksCount())
           }
         }
       } ~ path("overview") {
@@ -64,5 +79,4 @@ trait BaristaService extends BaseService with Config {
         }
       }
     }
-
 }

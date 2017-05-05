@@ -2,7 +2,7 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, DockerEntity}
+import com.victorursan.state.{Bean, DockerEntity, Pack}
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
@@ -15,7 +15,8 @@ import scala.util.Try
 object StateController extends JsonSupport with State {
   private val basePath = "/barista/state"
   private val awaitingPath = s"$basePath/awaiting"
-  private val runningPath = s"$basePath/running"
+  private val runningUnpackedPath = s"$basePath/running/unpacked"
+  private val runningPackedPath = s"$basePath/running/packed"
   private val historyAwaitingPath = s"$basePath/historyAwaiting"
   private val nextIdPath = s"$basePath/nextId"
   private val killingPath = s"$basePath/killing"
@@ -62,30 +63,54 @@ object StateController extends JsonSupport with State {
     newOldBeans
   }
 
-  override def addToRunning(bean: Bean): Set[Bean] = addToRunning(Set(bean))
+  override def addToRunningUnpacked(bean: Bean): Set[Bean] = addToRunningUnpacked(Set(bean))
 
-  override def addToRunning(beans: Set[Bean]): Set[Bean] = {
-    val newRunning = running ++ beans
-    CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
+  override def addToRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
+    val newRunning = runningUnpacked ++ beans
+    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
 
-  override def running: Set[Bean] =
-    Try(new String(CuratorService.read(runningPath))
+  override def runningUnpacked: Set[Bean] =
+    Try(new String(CuratorService.read(runningUnpackedPath))
       .parseJson
       .convertTo[Set[Bean]])
       .getOrElse(Set())
 
-  override def removeRunning(bean: Bean): Set[Bean] = removeRunning(Set(bean))
+  override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
 
-  override def removeRunning(beans: Set[Bean]): Set[Bean] = {
-    val newRunning = running diff beans
-    CuratorService.createOrUpdate(runningPath, newRunning.toJson.toString().getBytes)
+  override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
+    val newRunning = runningUnpacked diff beans
+    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
 
-  override def addToAccept(bean: Bean): Set[Bean] = {
-    val newBeans: Set[Bean] = awaitingBeans + bean
+  def addToRunningPacked(pack: Pack): Set[Pack] = addToRunningPacked(Set(pack))
+
+  def addToRunningPacked(packs: Set[Pack]): Set[Pack] = {
+    val newRunning = runningPacked ++ packs
+    CuratorService.createOrUpdate(runningPackedPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
+
+  def runningPacked: Set[Pack] =
+    Try(new String(CuratorService.read(runningPackedPath))
+      .parseJson
+      .convertTo[Set[Pack]])
+      .getOrElse(Set())
+
+  def removeRunningPacked(pack: Pack): Set[Pack] = removeRunningPacked(Set(pack))
+
+  def removeRunningPacked(packs: Set[Pack]): Set[Pack] = {
+    val newRunning = runningPacked diff packs
+    CuratorService.createOrUpdate(runningPackedPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
+
+  override def addToAccept(bean: Bean): Set[Bean] = addToAccept(Set(bean))
+
+  override def addToAccept(beans: Set[Bean]): Set[Bean] = {
+    val newBeans: Set[Bean] = awaitingBeans ++ beans
     CuratorService.createOrUpdate(awaitingPath, newBeans.toJson.toString().getBytes(StandardCharsets.UTF_8))
     newBeans
   }

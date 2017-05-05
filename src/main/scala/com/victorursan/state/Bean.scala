@@ -10,6 +10,6 @@ case class Bean(id: String, name: String, dockerEntity: DockerEntity, pack: Opti
     case None => s"$name~$id"
   }
 }
-case class RawBean(name: String, dockerEntity: DockerEntity) {
-  def toBean(id: String): Bean = Bean(id, name, dockerEntity)
+case class RawBean(name: String, dockerEntity: DockerEntity, pack: Option[String] = None) {
+  def toBean(id: String): Bean = Bean(id, name, dockerEntity, pack)
 }

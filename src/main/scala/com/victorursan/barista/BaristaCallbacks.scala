@@ -17,7 +17,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedSubscribed(subscribed: Subscribed): Unit = {
     print(subscribed.toString)
-    BaristaCalls.reconsile(StateController.running.map(scheduledBean => {
+    BaristaCalls.reconsile(StateController.runningUnpacked.map(scheduledBean => {
       Task.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(scheduledBean.taskId).build())
         .setAgentId(AgentID.newBuilder().setValue(scheduledBean.agentId.get).build()) //todo fix scheduledBean.agentId.get
@@ -30,7 +30,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers)
 
     scheduledBeans.foreach(BaristaCalls.acceptContainer(_))
-    StateController.addToRunning(scheduledBeans)
+    StateController.addToRunningUnpacked(scheduledBeans)
     StateController.removeFromAccept(consumedBeans)
 
     BaristaCalls.decline(canceledOffers.map(_.getId))
@@ -48,9 +48,9 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
       val taskId = update.getTaskId.getValue
       update.getState match {
         case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
-          StateController.running.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             StateController.addToAccept(scheduledBean) // todo
-            StateController.removeRunning(scheduledBean)
+            StateController.removeRunningUnpacked(scheduledBean)
           })
         case TaskState.TASK_KILLED =>
           StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)

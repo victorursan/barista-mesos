@@ -21,11 +21,13 @@ trait State {
 
   def addToAccept(bean: Bean): Set[Bean]
 
+  def addToAccept(beans: Set[Bean]): Set[Bean]
+
   def removeFromAccept(bean: Bean): Set[Bean]
 
   def removeFromAccept(beans: Set[Bean]): Set[Bean]
 
-  def addToRunning(bean: Bean): Set[Bean]
+  def addToRunningUnpacked(bean: Bean): Set[Bean]
 
   def addToOldBeans(bean: Bean): Set[Bean]
 
@@ -37,13 +39,13 @@ trait State {
 
   def removeOldBean(beans: Set[Bean]): Set[Bean]
 
-  def addToRunning(beans: Set[Bean]): Set[Bean]
+  def addToRunningUnpacked(beans: Set[Bean]): Set[Bean]
 
-  def running: Set[Bean]
+  def runningUnpacked: Set[Bean]
 
-  def removeRunning(bean: Bean): Set[Bean]
+  def removeRunningUnpacked(bean: Bean): Set[Bean]
 
-  def removeRunning(beans: Set[Bean]): Set[Bean]
+  def removeRunningUnpacked(beans: Set[Bean]): Set[Bean]
 
   def addToKill(taskID: TaskID): Set[TaskID]
 
