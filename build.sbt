@@ -14,7 +14,7 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("hseeberger", "maven")
 )
 resourceDirectory in Compile := baseDirectory.value / "src" / "main" / "resources"
-compileOrder in Compile := CompileOrder.ScalaThenJava
+compileOrder in Compile := CompileOrder.JavaThenScala
 
 libraryDependencies ++= {
   val AkkaVersion = "2.4.17"
@@ -37,8 +37,8 @@ libraryDependencies ++= {
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos withSources() withJavadoc(),
     "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
     "org.apache.curator" % "curator-framework" % Curator withSources(),
-    "org.apache.curator" % "curator-recipes" % Curator withSources(),
-    "org.apache.curator" % "curator-x-discovery" % Curator withSources(),
+//    "org.apache.curator" % "curator-recipes" % Curator withSources(),
+//    "org.apache.curator" % "curator-x-discovery" % Curator withSources(),
 
   "org.specs2" %% "specs2-core" % Specs2
   )

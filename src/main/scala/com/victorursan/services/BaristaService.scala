@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.{Duration, _}
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
@@ -62,7 +62,10 @@ trait BaristaService extends BaseService with Config {
             complete(baristaController.runningUnpackedTasks())
           }
         } ~ path("running" / "packed") {
-          get {
+           get {
+//             parameters(('pack ?)).as(Option[String]) {
+//
+//             }
             log.info("[GET] /api/task/running getting all tasks that should run")
             complete(baristaController.runningUnpackedTasks())
           }

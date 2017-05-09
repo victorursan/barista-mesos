@@ -5,7 +5,7 @@ import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo
 import org.apache.mesos.v1.Protos._
 
 import scala.language.postfixOps
-
+import scala.collection.JavaConverters._
 /**
   * Created by victor on 3/12/17.
   */
@@ -41,15 +41,16 @@ object TaskHandler {
       .setName(taskName)
       .setTaskId(taskID)
       .setAgentId(agentID)
-      .addResources(createScalarResource("cpus", dockerEntity.resource.cpu))
-      .addResources(createScalarResource("mem", dockerEntity.resource.mem))
+      .addResources(createScalarResource("cpus", dockerEntity.resource.cpu, dockerEntity.role))
+      .addResources(createScalarResource("mem", dockerEntity.resource.mem, dockerEntity.role))
       .setContainer(containerInfo)
-      .setCommand(CommandInfo.newBuilder.setShell(false))
+      .setCommand(CommandInfo.newBuilder.setShell(false).addAllArguments(dockerEntity.arguments.asJava))
       .build
 
-  private def createScalarResource(name: String, value: Double): Resource =
+  private def createScalarResource(name: String, value: Double, role: String): Resource =
     Resource.newBuilder
       .setName(name)
+      .setRole(role)
       .setType(Value.Type.SCALAR)
       .setScalar(Value.Scalar.newBuilder.setValue(value))
       .build

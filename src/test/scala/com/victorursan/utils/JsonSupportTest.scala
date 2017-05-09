@@ -10,15 +10,23 @@ import scala.language.postfixOps
   */
 class JsonSupportTest extends Specification with JsonSupport {
   private val randomJsonStr = """{"taskId":"hello-world~2","name":"hello-world","dockerEntity":{"image":"victorursan/akka-http-hello",
-    "role":"*","resource":{"cpu":0.2,"mem":128.0}},"offerId":"eec5810b-04f4-4dca-a75f-421ca290d920-O7653",
+    "role":"*","resource":{"cpu":0.2,"mem":128.0}, "arguments":[]},"offerId":"eec5810b-04f4-4dca-a75f-421ca290d920-O7653",
     "agentId":"eec5810b-04f4-4dca-a75f-421ca290d920-S1"}"""
   private val randomBean = Bean("2", "hello-world", DockerEntity("victorursan/akka-http-hello", "*", DockerResource(0.2, 128.0)),
     None, Some("eec5810b-04f4-4dca-a75f-421ca290d920-S1"), Some("eec5810b-04f4-4dca-a75f-421ca290d920-O7653"))
+
+  private val dockerEntityJson = """ {"image":"victorursan/akka-http-hello", "role":"*","resource":{"cpu":0.2,"mem":128.0}, "arguments": []} """
+  private val dockerEntity = DockerEntity(image = "victorursan/akka-http-hello", role = "*", resource = DockerResource(0.2, 128.0), List())
 
   "JsonSupportTest" should {
     "beanProtocol" in {
       randomJsonStr.parseJson.convertTo[Bean] must_== randomBean
       randomBean.toJson must_== randomJsonStr.parseJson
+    }
+
+    "dockerEntityProtocol" in {
+      dockerEntityJson.parseJson.convertTo[DockerEntity] must_== dockerEntity
+      dockerEntity.toJson must_== dockerEntityJson.parseJson
     }
 
   }
