@@ -13,6 +13,7 @@ import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{AgentID, FrameworkID, Offer, OfferID}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
+import org.apache.mesos.v1.master.Protos.Call.Type.GET_METRICS_VALUE
 import org.apache.mesos.v1.scheduler.Protos.Call.{Accept, AcceptInverseOffers, Acknowledge, Decline, DeclineInverseOffers, Kill, Message, Reconcile, Request, Shutdown}
 import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
 import rx.lang.scala.JavaConversions.toScalaObservable
@@ -44,8 +45,10 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setUser("root")
         .setName(fwName)
         .setFailoverTimeout(9)
-        .setRole(mesosRole)
+        .addRoles(mesosRole)
         .build())
+
+
 
     openStream = clientBuilder
       .subscribe(subscribeCall)
@@ -112,8 +115,8 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setTaskId(taskId)
         .setUuid(uuid)), ACKNOWLEDGE)
 
-  def acceptContainer(bean: Bean, filtersOpt: Option[Protos.Filters] = None): Unit =
-    accept(List(createOfferId(bean.offerId.get)), List(//todo remove the bean.offerId.get
+  def acceptContainer(bean: Bean, offerId: String, filtersOpt: Option[Protos.Filters] = None): Unit =
+    accept(List(createOfferId(offerId)), List(
       Offer.Operation.newBuilder()
         .setType(Offer.Operation.Type.LAUNCH)
         .setLaunch(

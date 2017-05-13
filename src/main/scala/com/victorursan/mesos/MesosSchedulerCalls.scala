@@ -19,7 +19,7 @@ trait MesosSchedulerCalls {
 
   def teardown(): Unit
 
-  def acceptContainer(bean: Bean, filtersOpt: Option[Protos.Filters] = None): Unit
+  def acceptContainer(bean: Bean, offerId: String, filtersOpt: Option[Protos.Filters] = None): Unit
 
   def accept(offerIds: Iterable[OfferID], offerOperations: List[Operation], filtersOpt: Option[Filters] = None): Unit
 

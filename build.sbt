@@ -7,6 +7,8 @@ mainClass := Some("com.victor.Main")
 scalaVersion := "2.12.2"
 updateOptions := updateOptions.value.withLatestSnapshots(false)
 
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
+
 resolvers ++= Seq(
   "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
   "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
@@ -26,6 +28,8 @@ libraryDependencies ++= {
   val RxJavaMesos = "0.1.2-SNAPSHOT"
   val Curator = "2.12.0"
   val Specs2 = "3.8.9"
+
+  val ConsulApi = "1.2.2"
   Seq(
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion withSources() withJavadoc(),
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion withSources() withJavadoc(),
@@ -36,11 +40,13 @@ libraryDependencies ++= {
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-client" % RxJavaMesos withSources() withJavadoc(),
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos withSources() withJavadoc(),
     "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
-    "org.apache.curator" % "curator-framework" % Curator withSources(),
-//    "org.apache.curator" % "curator-recipes" % Curator withSources(),
-//    "org.apache.curator" % "curator-x-discovery" % Curator withSources(),
+    "org.apache.curator" % "curator-framework" % Curator,
 
-  "org.specs2" %% "specs2-core" % Specs2
+    //consul
+    "com.ecwid.consul" % "consul-api" % ConsulApi withSources() withJavadoc(),
+
+    //tests
+    "org.specs2" %% "specs2-core" % Specs2
   )
 }
 

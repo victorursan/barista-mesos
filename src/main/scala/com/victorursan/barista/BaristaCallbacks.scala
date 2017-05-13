@@ -1,7 +1,8 @@
 package com.victorursan.barista
 
+import com.victorursan.consul.{ServiceController, Utils}
 import com.victorursan.mesos.MesosSchedulerCallbacks
-import com.victorursan.state.ScheduleState
+import com.victorursan.state.{Bean, ScheduleState}
 import com.victorursan.utils.JsonSupport
 import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos._
@@ -29,8 +30,8 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     val beans = StateController.awaitingBeans
     val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers)
 
-    scheduledBeans.foreach(BaristaCalls.acceptContainer(_))
-    StateController.addToRunningUnpacked(scheduledBeans)
+    scheduledBeans.foreach{case (bean: Bean, offerID: String) => BaristaCalls.acceptContainer(bean, offerID)}
+    StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
     StateController.removeFromAccept(consumedBeans)
 
     BaristaCalls.decline(canceledOffers.map(_.getId))
@@ -49,12 +50,19 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
       update.getState match {
         case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+            ServiceController.deregisterService("localhost", taskId) // todo
             StateController.addToAccept(scheduledBean) // todo
             StateController.removeRunningUnpacked(scheduledBean)
           })
         case TaskState.TASK_KILLED =>
+          ServiceController.deregisterService("localhost", taskId) // todo
           StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)
-        case _ => print("something \n\n\n\n\n\n\n\n\n")
+        case TaskState.TASK_RUNNING =>
+          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+            val baristaService = Utils.convertBeanToService(scheduledBean, scheduledBean.dockerEntity.resource.ports.headOption.map(_.hostPort.get).getOrElse(8500)) //todo
+            ServiceController.registerService("localhost", baristaService) // todo
+          })
+        case e => print(s"it's something $e \n")
       }
       print(StateController.addToOverview(taskId, update.toString).toString())
     }
