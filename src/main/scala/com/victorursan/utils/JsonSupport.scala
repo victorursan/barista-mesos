@@ -8,7 +8,9 @@ import spray.json._
   * Created by victor on 4/2/17.
   */
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-//  implicit val resourceProtocol: RootJsonFormat[DockerResource] = jsonFormat4(DockerResource)
+
+  implicit val beanCheckProtocol: RootJsonFormat[BeanCheck] = jsonFormat2(BeanCheck)
+
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = new RootJsonFormat[DockerResource] {
     private val CPU = "cpu"
     private val MEMORY = "mem"
@@ -93,7 +95,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
     }
   }
 
-  implicit val rawBeanProtocol: RootJsonFormat[RawBean] = jsonFormat3(RawBean)
+  implicit val rawBeanProtocol: RootJsonFormat[RawBean] = jsonFormat4(RawBean)
   implicit val quantityBeanProtocol: RootJsonFormat[QuantityBean] = jsonFormat3(QuantityBean)
   implicit val packProtocol: RootJsonFormat[Pack] = jsonFormat2(Pack)
 
@@ -103,6 +105,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
     private val TASK_ID = "taskId"
     private val NAME = "name"
     private val DOCKER_ENTITY = "dockerEntity"
+    private val CHECKS = "checks"
 
     override def write(bean: Bean): JsValue = {
       JsObject(List(
@@ -110,7 +113,8 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
         Some(NAME -> bean.name.toJson),
         Some(DOCKER_ENTITY -> bean.dockerEntity.toJson),
         bean.hostname.map(hostname => HOSTNAME -> hostname.toJson),
-        bean.agentId.map(agentId => AGENT_ID -> agentId.toJson)
+        bean.agentId.map(agentId => AGENT_ID -> agentId.toJson),
+        Some(CHECKS -> bean.checks.toJson)
       ).flatten: _*)
     }
 
@@ -118,6 +122,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
       val jsObject = json.asJsObject
       val agentIdOpt = jsObject.fields.get(AGENT_ID).map(_.convertTo[String])
       val hostnameOpt = jsObject.fields.get(HOSTNAME).map(_.convertTo[String])
+      val checks = jsObject.fields.get(CHECKS).map(_.convertTo[List[BeanCheck]]).getOrElse(List())
       jsObject.getFields(TASK_ID, NAME, DOCKER_ENTITY) match {
         case Seq(taskIdRaw, nameJs, dockerEntityJs) =>
           val dockerEntity = dockerEntityJs.convertTo[DockerEntity]
@@ -126,9 +131,9 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
           val fullTaskIdRegex = s"""(.*)~$name~(\\d+)""".r
           val partialTaskIdRegex = s"""$name~(\\d+)""".r
           rawTask match {
-            case fullTaskIdRegex(pack, taskId) => Bean(id = taskId, name = name, dockerEntity = dockerEntity, pack = Some(pack), agentId = agentIdOpt, hostname = hostnameOpt)
-            case partialTaskIdRegex(taskId) => Bean(id = taskId, name = name, dockerEntity = dockerEntity, pack = None, agentId = agentIdOpt, hostname = hostnameOpt)
-            case _ => Bean(id = rawTask, name = name, dockerEntity = dockerEntity, agentId = agentIdOpt, hostname = hostnameOpt) // todo this should be logged, not normal
+            case fullTaskIdRegex(pack, taskId) => Bean(id = taskId, name = name, dockerEntity = dockerEntity, pack = Some(pack), agentId = agentIdOpt, hostname = hostnameOpt, checks = checks)
+            case partialTaskIdRegex(taskId) => Bean(id = taskId, name = name, dockerEntity = dockerEntity, pack = None, agentId = agentIdOpt, hostname = hostnameOpt, checks = checks)
+            case _ => Bean(id = rawTask, name = name, dockerEntity = dockerEntity, agentId = agentIdOpt, hostname = hostnameOpt, checks = checks) // todo this should be logged, not normal
           }
         case other => deserializationError(s"Cannot deserialize Bean: invalid input. Raw input: $other")
       }

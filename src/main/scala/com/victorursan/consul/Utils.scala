@@ -1,5 +1,7 @@
 package com.victorursan.consul
 
+import java.net.URL
+
 import com.victorursan.state.Bean
 
 /**
@@ -8,6 +10,7 @@ import com.victorursan.state.Bean
 object Utils {
 
   def convertBeanToService(bean: Bean, servicePort: Int): BaristaService =
-    BaristaService(bean.taskId, bean.name, serviceAddress = bean.hostname.get, servicePort = servicePort)
+    BaristaService(bean.taskId, bean.name, serviceAddress = bean.hostname.get, servicePort = servicePort,
+      checks = bean.checks.map(bc => BaristaCheck(new URL(s"http://${bean.hostname.get}:$servicePort${bc.httpPath}"), bc.interval)))
 
 }

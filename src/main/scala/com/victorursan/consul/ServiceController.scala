@@ -28,7 +28,7 @@ object ServiceController {
   private def baristaCheckToCheck(baristaCheck: BaristaCheck): NewService.Check = {
     val check = new NewService.Check
     check.setHttp(baristaCheck.httpHealth.toString)
-    check.setInterval(baristaCheck.interval.toString)
+    check.setInterval(s"${baristaCheck.interval.toString}s")
     check
   }
 
