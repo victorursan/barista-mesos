@@ -25,7 +25,7 @@ object BaristaScheduler {
   }
 
   private def scheduleBean(bean: Bean, offers: List[Offer]): Option[(Bean, Offer)] = {
-    offers.map { offer => (beanWithHostPort(bean, offer), offer) }
+    offers.sortBy(memFromOffer).map { offer => (beanWithHostPort(bean, offer), offer) }
       .flatMap {
         case (Some(bean: Bean), offer: Offer) => Option((bean, offer))
         case _ => None

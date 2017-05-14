@@ -45,7 +45,6 @@ object BaristaCalls extends MesosSchedulerCalls {
         .setUser("root")
         .setName(fwName)
         .setFailoverTimeout(9)
-        .addRoles(mesosRole)
         .build())
 
 

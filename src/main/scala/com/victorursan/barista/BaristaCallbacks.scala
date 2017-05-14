@@ -50,17 +50,19 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
       update.getState match {
         case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
-            ServiceController.deregisterService("localhost", taskId) // todo
+            ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
             StateController.addToAccept(scheduledBean) // todo
             StateController.removeRunningUnpacked(scheduledBean)
           })
         case TaskState.TASK_KILLED =>
-          ServiceController.deregisterService("localhost", taskId) // todo
-          StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)
+          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+            ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
+            StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)
+          })
         case TaskState.TASK_RUNNING =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             val baristaService = Utils.convertBeanToService(scheduledBean, scheduledBean.dockerEntity.resource.ports.headOption.map(_.hostPort.get).getOrElse(8500)) //todo
-            ServiceController.registerService("localhost", baristaService) // todo
+            ServiceController.registerService(baristaService.serviceAddress, baristaService) // todo
           })
         case e => print(s"it's something $e \n")
       }

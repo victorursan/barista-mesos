@@ -7,7 +7,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry
   * Created by victor on 4/23/17.
   */
 object CuratorService {
-  private val zkConnection: String = "127.0.0.1:2181"
+  private val zkConnection: String = "10.1.1.11:2181"
   private val client: CuratorFramework = CuratorFrameworkFactory.newClient(zkConnection, new ExponentialBackoffRetry(1000, 3))
   client.start()
   client.blockUntilConnected()

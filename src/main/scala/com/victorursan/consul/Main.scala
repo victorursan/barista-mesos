@@ -14,7 +14,7 @@ object Main extends App {
   import com.ecwid.consul.v1.{ConsulClient, QueryParams}
   import com.ecwid.consul.v1.agent.model.NewService
 
-  val client = new ConsulClient("localhost", 8500)
+  val client = new ConsulClient("10.1.1.11", 8500)
   print(ServiceController.serviceHealthChecks(client, "mesos"))
   // set KV
 //  val binaryData = Array[Byte](1, 2, 3, 4, 5, 6, 7)

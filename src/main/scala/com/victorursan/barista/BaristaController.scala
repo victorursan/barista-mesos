@@ -18,7 +18,7 @@ import scala.language.postfixOps
 class BaristaController extends JsonSupport {
   private val fwName = "Barista"
   private val fwId = s"$fwName-${UUID.randomUUID}"
-  private val mesosUri = URI.create("http://localhost:8000/mesos/api/v1/scheduler")
+  private val mesosUri = URI.create("http://10.1.1.11:5050/api/v1/scheduler")
   private val role = "*"
 
   def start(): Unit =
