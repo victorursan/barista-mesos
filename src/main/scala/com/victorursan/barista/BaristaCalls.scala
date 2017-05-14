@@ -13,7 +13,6 @@ import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{AgentID, FrameworkID, Offer, OfferID}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
-import org.apache.mesos.v1.master.Protos.Call.Type.GET_METRICS_VALUE
 import org.apache.mesos.v1.scheduler.Protos.Call.{Accept, AcceptInverseOffers, Acknowledge, Decline, DeclineInverseOffers, Kill, Message, Reconcile, Request, Shutdown}
 import org.apache.mesos.v1.scheduler.Protos.{Call, Event}
 import rx.lang.scala.JavaConversions.toScalaObservable
