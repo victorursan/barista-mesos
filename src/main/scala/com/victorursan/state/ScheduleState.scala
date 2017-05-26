@@ -1,7 +1,5 @@
 package com.victorursan.state
 
-import org.apache.mesos.v1.Protos.Offer
-
 /**
   * Created by victor on 5/3/17.
   */

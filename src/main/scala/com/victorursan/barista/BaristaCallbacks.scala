@@ -26,15 +26,16 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     }))
   }
 
-  override def receivedOffers(offers: List[Offer]): Unit = {
+  override def receivedOffers(messosOffers: List[Offer]): Unit = {
     val beans = StateController.awaitingBeans
+    val offers = Utils.convertOffers(messosOffers).toList
     val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers)
 
     scheduledBeans.foreach{case (bean: Bean, offerID: String) => BaristaCalls.acceptContainer(bean, offerID)}
     StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
     StateController.removeFromAccept(consumedBeans)
 
-    BaristaCalls.decline(canceledOffers.map(_.getId))
+    BaristaCalls.decline(canceledOffers.map(off => OfferID.newBuilder().setValue(off.id).build()))
   }
 
   override def receivedInverseOffers(offers: List[InverseOffer]): Unit = print(offers.toString())

@@ -10,15 +10,28 @@ import scala.language.postfixOps
   * Created by victor on 5/4/17.
   */
 class JsonSupportTest extends Specification with JsonSupport {
-  private val randomJsonStr = """{"taskId":"hello-world~2","name":"hello-world","dockerEntity":{"image":"victorursan/akka-http-hello",
-    "role":"*", "network":"bridge", "resource":{"cpu":0.2,"mem":128.0, "ports":["4321", "4322 -> 1233"]}, "arguments":[]},"checks":[{"httpPath": "/", "interval": 5}],"hostname":"eec5810b-04f4-4dca-a75f-421ca290d920-O7653",
+  private val randomJsonStr =
+    """{"taskId":"hello-world~2","name":"hello-world","dockerEntity":{"image":"victorursan/akka-http-hello",
+    "role":"*", "network":"bridge", "resource":{"cpu":0.2,"mem":128.0, "ports":["4321", "4322 -> 1233"]}, "arguments":[]},
+    "checks":[{"httpPath": "/", "interval": 5}],"hostname":"eec5810b-04f4-4dca-a75f-421ca290d920-O7653",
     "agentId":"eec5810b-04f4-4dca-a75f-421ca290d920-S1"}"""
   private val randomBean = Bean("2", "hello-world", DockerEntity("victorursan/akka-http-hello",
-    resource=DockerResource(0.2, 128.0, disk = None, ports = List(DockerPort(4321, None),DockerPort(4322, Some(1233))))), checks=List(BeanCheck(httpPath = "/", interval = 5)),
-    agentId=Some("eec5810b-04f4-4dca-a75f-421ca290d920-S1"), hostname=Some("eec5810b-04f4-4dca-a75f-421ca290d920-O7653"))
+    resource = DockerResource(0.2, 128.0, disk = None, ports = List(DockerPort(4321, None), DockerPort(4322, Some(1233))))),
+    checks = List(BeanCheck(httpPath = "/", interval = 5)),
+    agentId = Some("eec5810b-04f4-4dca-a75f-421ca290d920-S1"), hostname = Some("eec5810b-04f4-4dca-a75f-421ca290d920-O7653"))
 
-  private val dockerEntityJson = """ {"image":"victorursan/akka-http-hello", "role":"*","network":"host","resource":{"cpu":0.2,"mem":128.0, "disk":1233.0, "ports":[]},"arguments": []} """
-  private val dockerEntity = DockerEntity(image = "victorursan/akka-http-hello", network="host", resource = DockerResource(0.2, 128.0, Some(1233)), arguments=List())
+  private val dockerEntityJson =
+    """ {"image":"victorursan/akka-http-hello", "role":"*","network":"host",
+      |"resource":{"cpu":0.2,"mem":128.0, "disk":1233.0, "ports":[]},"arguments": []} """.stripMargin
+  private val dockerEntity = DockerEntity(image = "victorursan/akka-http-hello", network = "host",
+    resource = DockerResource(0.2, 128.0, Some(1233)), arguments = List())
+
+  private val offerJson =
+    """ { "id": "a", "agentId": "b", "hostname": "c", "mem": 1.1, "cpu": 2.2, "ports":[{"start": 1, "end": 4},
+      |{"start": 9, "end": 1333}] } """.stripMargin
+  private val offer = Offer(id = "a", agentId = "b", hostname = "c", mem = 1.1, cpu = 2.2, ports = List(Range.inclusive(1, 4),
+    Range.inclusive(9, 1333)))
+
 
   "JsonSupportTest" should {
     "beanProtocol" in {
@@ -29,6 +42,11 @@ class JsonSupportTest extends Specification with JsonSupport {
     "dockerEntityProtocol" in {
       dockerEntityJson.parseJson.convertTo[DockerEntity] must_== dockerEntity
       dockerEntity.toJson must_== dockerEntityJson.parseJson
+    }
+
+    "offerProtocol" in {
+      offerJson.parseJson.convertTo[Offer] must_== offer
+      offer.toJson must_== offerJson.parseJson
     }
 
   }

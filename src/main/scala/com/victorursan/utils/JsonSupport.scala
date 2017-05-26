@@ -107,7 +107,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
     private val DOCKER_ENTITY = "dockerEntity"
     private val CHECKS = "checks"
 
-    override def write(bean: Bean): JsValue = {
+    override def write(bean: Bean): JsValue =
       JsObject(List(
         Some(TASK_ID -> bean.taskId.toJson),
         Some(NAME -> bean.name.toJson),
@@ -116,7 +116,6 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
         bean.agentId.map(agentId => AGENT_ID -> agentId.toJson),
         Some(CHECKS -> bean.checks.toJson)
       ).flatten: _*)
-    }
 
     override def read(json: JsValue): Bean = {
       val jsObject = json.asJsObject
@@ -136,6 +135,49 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
             case _ => Bean(id = rawTask, name = name, dockerEntity = dockerEntity, agentId = agentIdOpt, hostname = hostnameOpt, checks = checks) // todo this should be logged, not normal
           }
         case other => deserializationError(s"Cannot deserialize Bean: invalid input. Raw input: $other")
+      }
+    }
+  }
+
+  implicit val offerProtocol: RootJsonFormat[Offer] = new RootJsonFormat[Offer] {
+    private val ID = "id"
+    private val AGENT_ID = "agentId"
+    private val HOSTNAME = "hostname"
+    private val MEM = "mem"
+    private val CPU = "cpu"
+    private val PORTS = "ports"
+    private val START = "start"
+    private val END = "end"
+
+    override def write(offer: Offer): JsValue =
+      JsObject(Map(
+        ID -> offer.id.toJson,
+        AGENT_ID -> offer.agentId.toJson,
+        HOSTNAME -> offer.hostname.toJson,
+        MEM -> offer.mem.toJson,
+        CPU -> offer.cpu.toJson,
+        PORTS -> offer.ports.map(r => Map(START -> r.start, END -> r.end).toJson).toJson
+      ))
+
+
+    override def read(json: JsValue): Offer = {
+      val jsObject = json.asJsObject
+      jsObject.getFields(ID, AGENT_ID, HOSTNAME, MEM, CPU, PORTS) match {
+        case Seq(idJs, agentIdJs, hostnameJs, memJs, cpuJsJs, portsJs) => {
+          val id = idJs.convertTo[String]
+          val agentId = agentIdJs.convertTo[String]
+          val hostname = hostnameJs.convertTo[String]
+          val mem = memJs.convertTo[Double]
+          val cpu = cpuJsJs.convertTo[Double]
+          val ports: List[Range.Inclusive] = portsJs.convertTo[List[JsValue]].map(_.asJsObject.getFields(START, END) match {
+            case Seq(startJs, endJs) => Range.inclusive(startJs.convertTo[Int], endJs.convertTo[Int])
+            case other => deserializationError(s"Cannot deserialize Offer: invalid input. Raw input: $other")
+          })
+
+          Offer(id, agentId, hostname, mem, cpu, ports)
+
+        }
+        case other => deserializationError(s"Cannot deserialize Offer: invalid input. Raw input: $other")
       }
     }
   }
