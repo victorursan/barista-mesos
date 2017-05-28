@@ -1,17 +1,21 @@
 package com.victorursan.services
 
 import akka.actor.ActorSystem
-import akka.event.{ Logging, LoggingAdapter }
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives
 import akka.stream.ActorMaterializer
-import com.victorursan.barista.Config
-import com.victorursan.utils.JsonSupport
+import com.victorursan.utils.{Config, JsonSupport}
 
-trait BaseService extends Protocol with SprayJsonSupport with Config with Directives with JsonSupport {
+import scala.concurrent.ExecutionContext
+
+/**
+  * Created by victor on 4/2/17.
+  */
+trait BaseService extends Protocol with Config with Directives with JsonSupport {
   protected def serviceName: String
 
   protected def system: ActorSystem
 
   protected def materializer: ActorMaterializer
+
+  protected def ec: ExecutionContext
 }
