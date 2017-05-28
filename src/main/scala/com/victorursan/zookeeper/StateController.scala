@@ -117,27 +117,26 @@ object StateController extends JsonSupport with State {
       .convertTo[Set[Bean]])
       .getOrElse(Set())
 
-  override def addToKill(taskID: TaskID): Set[TaskID] = {
-    val newTasksKill = tasksToKill + taskID
-    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+  override def addToKill(taskID: String): Set[String] = addToKill(Set(taskID))
+
+  override def addToKill(tasksID: Set[String]): Set[String] = {
+    val newTasksKill = tasksToKill ++ tasksID
+    CuratorService.createOrUpdate(killingPath, newTasksKill.toJson.toString().getBytes)
     newTasksKill
   }
 
-  override def removeFromKill(taskID: TaskID): Set[TaskID] = removeFromKill(Set(taskID))
+  override def removeFromKill(taskID: String): Set[String] = removeFromKill(Set(taskID))
 
-  override def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID] = {
+  override def removeFromKill(taskIDs: Set[String]): Set[String] = {
     val newTasksKill = tasksToKill diff taskIDs
-    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+    CuratorService.createOrUpdate(killingPath, newTasksKill.toJson.toString().getBytes)
     newTasksKill
   }
 
-  override def tasksToKill: Set[TaskID] =
+  override def tasksToKill: Set[String] =
     Try(new String(CuratorService.read(killingPath))
       .parseJson
-      .convertTo[Set[String]]
-      .map(TaskID.newBuilder()
-        .setValue(_)
-        .build()))
+      .convertTo[Set[String]])
       .getOrElse(Set())
 
 

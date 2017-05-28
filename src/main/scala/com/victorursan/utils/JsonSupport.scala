@@ -11,6 +11,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
   implicit val beanCheckProtocol: RootJsonFormat[BeanCheck] = jsonFormat2(BeanCheck)
   implicit val beanDockerProtocol: RootJsonFormat[BeanDocker] = jsonFormat3(BeanDocker)
+  implicit val scaleBeanProtocol: RootJsonFormat[ScaleBean] = jsonFormat3(ScaleBean)
 
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = new RootJsonFormat[DockerResource] {
     private val CPU = "cpu"

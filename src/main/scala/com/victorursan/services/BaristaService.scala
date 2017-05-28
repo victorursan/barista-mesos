@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
-import com.victorursan.state.{Pack, RawBean}
+import com.victorursan.state.{Pack, RawBean, ScaleBean}
 import com.victorursan.utils.Config
 import org.slf4j.LoggerFactory
 
@@ -39,10 +39,17 @@ trait BaristaService extends BaseService with Config {
       }
     } ~ pathPrefix("api") {
       pathPrefix("task") {
-        path("bean" / "add") {
-          log.info("[POST] /api/task/bean/add launching a new bean")
-          entity(as[RawBean]) { rawBean: RawBean =>
-            complete(baristaController.launchRawBean(rawBean))
+        pathPrefix("bean") {
+          path("add") {
+            log.info("[POST] /api/task/bean/add launching a new bean")
+            entity(as[RawBean]) { rawBean: RawBean =>
+              complete(baristaController.launchRawBean(rawBean))
+            }
+          } ~ path("scale") {
+            log.info("[POST] /api/task/bean/scale scalling a bean")
+            entity(as[ScaleBean]) { scaleBean: ScaleBean =>
+              complete(baristaController.scaleBean(scaleBean))
+            }
           }
         } ~ path("pack" / "add") {
           log.info("[POST] /api/task/pack/add launching a new pack")
@@ -52,8 +59,11 @@ trait BaristaService extends BaseService with Config {
         } ~ path("kill") {
           post {
             log.info("[POST] /api/task/kill killing the entity")
-            entity(as[String]) { taskId =>
-              complete(baristaController.killTask(taskId))
+            entity(as[Set[String]]) { tasksId =>
+              complete(baristaController.killTask(tasksId))
+            } ~
+            entity(as[String]) { tasksId =>
+              complete(baristaController.killTask(Set(tasksId)))
             }
           }
         } ~ path("running" / "unpacked") {

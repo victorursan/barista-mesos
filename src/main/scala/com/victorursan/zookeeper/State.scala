@@ -18,7 +18,7 @@ trait State {
 
   def awaitingBeans: Set[Bean]
 
-  def tasksToKill: Set[TaskID]
+  def tasksToKill: Set[String]
 
   def addToAccept(bean: Bean): Set[Bean]
 
@@ -48,11 +48,12 @@ trait State {
 
   def removeRunningUnpacked(beans: Set[Bean]): Set[Bean]
 
-  def addToKill(taskID: TaskID): Set[TaskID]
+  def addToKill(taskID: String): Set[String]
+  def addToKill(tasksID: Set[String]): Set[String]
 
-  def removeFromKill(taskID: TaskID): Set[TaskID]
+  def removeFromKill(taskID: String): Set[String]
 
-  def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID]
+  def removeFromKill(taskIDs: Set[String]): Set[String]
 
   def addToOffer(offer: Offer): Set[Offer]
 
