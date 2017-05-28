@@ -2,25 +2,29 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, DockerEntity, Pack}
+import com.victorursan.state.{Bean, BeanDocker, Offer, Pack}
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
-
 import scala.util.Try
 
 /**
   * Created by victor on 4/24/17.
   */
 object StateController extends JsonSupport with State {
+
+
   private val basePath = "/barista/state"
   private val awaitingPath = s"$basePath/awaiting"
+  private val offersPath = s"$basePath/offers"
   private val runningUnpackedPath = s"$basePath/running/unpacked"
   private val runningPackedPath = s"$basePath/running/packed"
   private val historyAwaitingPath = s"$basePath/historyAwaiting"
   private val nextIdPath = s"$basePath/nextId"
   private val killingPath = s"$basePath/killing"
   private val overviewPath = s"$basePath/overview"
+  private val beanDockerPath = s"$basePath/beanDocker"
+
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
     val newOverview = getOverview + (taskId -> state)
@@ -85,28 +89,6 @@ object StateController extends JsonSupport with State {
     newRunning
   }
 
-  def addToRunningPacked(pack: Pack): Set[Pack] = addToRunningPacked(Set(pack))
-
-  def addToRunningPacked(packs: Set[Pack]): Set[Pack] = {
-    val newRunning = runningPacked ++ packs
-    CuratorService.createOrUpdate(runningPackedPath, newRunning.toJson.toString().getBytes)
-    newRunning
-  }
-
-  def runningPacked: Set[Pack] =
-    Try(new String(CuratorService.read(runningPackedPath))
-      .parseJson
-      .convertTo[Set[Pack]])
-      .getOrElse(Set())
-
-  def removeRunningPacked(pack: Pack): Set[Pack] = removeRunningPacked(Set(pack))
-
-  def removeRunningPacked(packs: Set[Pack]): Set[Pack] = {
-    val newRunning = runningPacked diff packs
-    CuratorService.createOrUpdate(runningPackedPath, newRunning.toJson.toString().getBytes)
-    newRunning
-  }
-
   override def addToAccept(bean: Bean): Set[Bean] = addToAccept(Set(bean))
 
   override def addToAccept(beans: Set[Bean]): Set[Bean] = {
@@ -158,5 +140,53 @@ object StateController extends JsonSupport with State {
         .build()))
       .getOrElse(Set())
 
+
+  override def addToOffer(offer: Offer): Set[Offer] = addToOffer(Set(offer))
+
+  override def addToOffer(offers: Set[Offer]): Set[Offer] = {
+    val newOffers: Set[Offer] = availableOffers ++ offers
+    CuratorService.createOrUpdate(offersPath, newOffers.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    newOffers
+  }
+
+  override def availableOffers: Set[Offer] =
+    Try(new String(CuratorService.read(offersPath))
+      .parseJson
+      .convertTo[Set[Offer]])
+      .getOrElse(Set())
+
+  override def removeFromOffer(offerId: String): Set[Offer] = removeFromOffer(Set(offerId))
+
+  override def removeFromOffer(offersId: Set[String]): Set[Offer] = {
+    val newOffers = availableOffers.filterNot(offer => offersId.contains(offer.id))
+    CuratorService.createOrUpdate(offersPath, newOffers.toJson.toString().getBytes)
+    newOffers
+  }
+
+
+  override def addToBeanDocker(beanDocker: BeanDocker): Set[BeanDocker] = addToBeanDocker(Set(beanDocker))
+
+  override def addToBeanDocker(beanDockers: Set[BeanDocker]): Set[BeanDocker] = {
+    val newBeanDocker: Set[BeanDocker] = availableBeanDocker ++ beanDockers
+    CuratorService.createOrUpdate(beanDockerPath, newBeanDocker.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    newBeanDocker
+  }
+
+  override def removeFromBeanDocker(taskId: String): Set[BeanDocker] = removeFromBeanDocker(Set(taskId))
+
+  override def removeFromBeanDocker(tasksId: Set[String]): Set[BeanDocker] = {
+    val newBeanDocker = availableBeanDocker.filterNot(beanDocker => tasksId.contains(beanDocker.taskId))
+    CuratorService.createOrUpdate(beanDockerPath, newBeanDocker.toJson.toString().getBytes)
+    newBeanDocker
+  }
+
+  override def availableBeanDocker: Set[BeanDocker] =
+    Try(new String(CuratorService.read(beanDockerPath))
+      .parseJson
+      .convertTo[Set[BeanDocker]])
+      .getOrElse(Set())
+
   def clean(): Unit = CuratorService.delete(basePath)
+
+  def cleanOffers(): Unit = CuratorService.delete(offersPath)
 }

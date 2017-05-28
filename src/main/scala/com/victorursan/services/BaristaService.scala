@@ -62,10 +62,10 @@ trait BaristaService extends BaseService with Config {
             complete(baristaController.runningUnpackedTasks())
           }
         } ~ path("running" / "packed") {
-           get {
-//             parameters(('pack ?)).as(Option[String]) {
-//
-//             }
+          get {
+            //             parameters(('pack ?)).as(Option[String]) {
+            //
+            //             }
             log.info("[GET] /api/task/running getting all tasks that should run")
             complete(baristaController.runningUnpackedTasks())
           }
@@ -79,6 +79,13 @@ trait BaristaService extends BaseService with Config {
         get {
           log.info("[GET] /api/overview an overview")
           complete(baristaController.stateOverview())
+        }
+      } ~ pathPrefix("offers") {
+        path("available") {
+          get {
+            log.info("[GET] /api/offers/available an overview of available offers")
+            complete(baristaController.availableOffers)
+          }
         }
       }
     }

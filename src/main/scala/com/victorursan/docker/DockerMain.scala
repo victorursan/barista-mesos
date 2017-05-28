@@ -53,9 +53,6 @@ object DockerMain extends App {
 //  }
 ////  val pinger = system.actorOf(Props(new TcpClient( new  InetSocketAddress("http://10.1.10.11:2375/containers/79a9e274fae0b44d9360c46aa129c95df8b0a3285cb585697fd3c8ea76cd555d/stats", 2375), "", promise)), "pinger")
 ////  new TcpClient(new InetSocketAddress("http://10.1.10.11", 2375), "containers/79a9e274fae0b44d9360c46aa129c95df8b0a3285cb585697fd3c8ea76cd555d/stats", promise)
-//  val cpuDelta: Double = 9504372473l - 9502756562l// CPUStats.CPUUsage.TotalUsage - PreCPUStats.CPUUsage.TotalUsage
-//  val systemDelta: Double = 4071030000000l - 4070030000000l// CPUStats.SystemUsage - PreCPUStats.SystemUsage
-//  val cpuPercent = (cpuDelta / systemDelta) * 1 * 100// float64(len(v.CPUStats.CPUUsage.PercpuUsage)) * 100.0
 //
 //  print(cpuPercent)
 }

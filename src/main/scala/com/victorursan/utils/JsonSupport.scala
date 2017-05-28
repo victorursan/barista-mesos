@@ -10,6 +10,7 @@ import spray.json._
 trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
   implicit val beanCheckProtocol: RootJsonFormat[BeanCheck] = jsonFormat2(BeanCheck)
+  implicit val beanDockerProtocol: RootJsonFormat[BeanDocker] = jsonFormat3(BeanDocker)
 
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = new RootJsonFormat[DockerResource] {
     private val CPU = "cpu"
@@ -35,16 +36,16 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
           val cpu = cpuJs.convertTo[Double]
           val mem = memJs.convertTo[Double]
           DockerResource(cpu = cpu, mem = mem, diskOpt, ports = ports)
-        case other => deserializationError(s"Cannot deserialize DockerEntity: invalid input. Raw input: $other" )
+        case other => deserializationError(s"Cannot deserialize DockerEntity: invalid input. Raw input: $other")
       }
     }
 
     private def writeDockerPort(dockerPort: DockerPort): JsValue = {
-        if (dockerPort.hostPort.isDefined) {
-          s"${dockerPort.containerPort} -> ${dockerPort.hostPort.get}".toJson
-        } else {
-          s"${dockerPort.containerPort}".toJson
-        }
+      if (dockerPort.hostPort.isDefined) {
+        s"${dockerPort.containerPort} -> ${dockerPort.hostPort.get}".toJson
+      } else {
+        s"${dockerPort.containerPort}".toJson
+      }
     }
 
     private def readDockerPort(jsonStr: String): DockerPort = {

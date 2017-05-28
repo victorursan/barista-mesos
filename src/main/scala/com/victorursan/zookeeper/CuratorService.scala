@@ -2,6 +2,7 @@ package com.victorursan.zookeeper
 
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
+//import org.apache.zook
 
 /**
   * Created by victor on 4/23/17.

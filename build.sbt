@@ -41,6 +41,7 @@ libraryDependencies ++= {
     "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos withSources() withJavadoc(),
     "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
     "org.apache.curator" % "curator-framework" % Curator,
+    "org.apache.curator" % "curator-recipes" % Curator,
 
     //consul
     "com.ecwid.consul" % "consul-api" % ConsulApi withSources() withJavadoc(),

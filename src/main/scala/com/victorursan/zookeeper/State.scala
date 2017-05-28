@@ -1,7 +1,8 @@
 package com.victorursan.zookeeper
 
-import com.victorursan.state.Bean
+import com.victorursan.state.{Bean, BeanDocker, Offer}
 import org.apache.mesos.v1.Protos.TaskID
+
 
 /**
   * Created by victor on 4/24/17.
@@ -52,4 +53,25 @@ trait State {
   def removeFromKill(taskID: TaskID): Set[TaskID]
 
   def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID]
+
+  def addToOffer(offer: Offer): Set[Offer]
+
+  def addToOffer(offers: Set[Offer]): Set[Offer]
+
+  def removeFromOffer(offer: String): Set[Offer]
+
+  def removeFromOffer(offers: Set[String]): Set[Offer]
+
+  def addToBeanDocker(beanDocker: BeanDocker): Set[BeanDocker]
+
+  def addToBeanDocker(beanDockers: Set[BeanDocker]): Set[BeanDocker]
+
+  def removeFromBeanDocker(taskId: String): Set[BeanDocker]
+
+  def removeFromBeanDocker(tasksId: Set[String]): Set[BeanDocker]
+
+  def availableBeanDocker: Set[BeanDocker]
+
+  def availableOffers: Set[Offer]
+
 }
