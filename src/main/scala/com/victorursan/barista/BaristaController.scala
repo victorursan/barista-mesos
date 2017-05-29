@@ -112,7 +112,7 @@ class BaristaController extends JsonSupport {
 
 
   def killTask(tasksId: Set[String]): JsValue = {
-    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
+//    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
     val tasks = StateController.addToKill(tasksId)
     for (task <- tasks) {
       BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
@@ -123,8 +123,13 @@ class BaristaController extends JsonSupport {
   def availableOffers: JsValue = StateController.availableOffers toJson
 
   def teardown(): String = {
-    BaristaCalls.teardown()
-    StateController.clean()
+    killTask(StateController.runningUnpacked.map(_.taskId))
+    system.scheduler.schedule(1 seconds, 4 seconds) {
+      if (StateController.tasksToKill.isEmpty){ //todo this will throw an error after the first true
+      BaristaCalls.teardown()
+      StateController.clean()
+      }
+    }
     "We are closed"
   }
 }

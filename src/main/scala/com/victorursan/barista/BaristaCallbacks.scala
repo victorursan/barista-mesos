@@ -58,6 +58,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
         case TaskState.TASK_KILLED =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
+            StateController.removeRunningUnpacked(scheduledBean)
             StateController.tasksToKill.find(t => t.equals(taskId)).foreach(StateController.removeFromKill)
             StateController.removeFromBeanDocker(taskId)
           })
@@ -74,13 +75,13 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
                 StateController.addToBeanDocker(beanDocker)
                 DockerController
                   .registerBeanDocker(beanDocker)
-                  .subscribe(dockersta => Unit
-//todo                    println(dockersta)
+                  .subscribe(dockerista => Unit
+//todo                    println(dockerista)
                   )
                 })
             ServiceController.registerService(baristaService.serviceAddress, baristaService) // todo
           })
-        case e => print(s"it's something $e \n")
+        case e => println(s"it's something $e \n")
       }
       print(StateController.addToOverview(taskId, update.toString).toString())
     }

@@ -71,14 +71,6 @@ trait BaristaService extends BaseService with Config {
             log.info("[GET] /api/task/running getting all tasks that should run")
             complete(baristaController.runningUnpackedTasks())
           }
-        } ~ path("running" / "packed") {
-          get {
-            //             parameters(('pack ?)).as(Option[String]) {
-            //
-            //             }
-            log.info("[GET] /api/task/running getting all tasks that should run")
-            complete(baristaController.runningUnpackedTasks())
-          }
         } ~ path("running" / "count") {
           get {
             log.info("[GET] /api/task/running/count getting all tasks that should run")
