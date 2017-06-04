@@ -15,7 +15,7 @@ object TaskHandler {
 
   def createTaskWith(agentID: AgentID, bean: Bean): TaskInfo = {
     val taskID: TaskID = createTaskId(bean.taskId)
-    val dockerInfo: DockerInfo = createDockerInfo(bean.dockerEntity)
+    val dockerInfo: DockerInfo = createDockerInfo(bean)
     val containerInfo: ContainerInfo = createContainerInfo(dockerInfo)
     createDockerTask(taskID, agentID, containerInfo, bean.dockerEntity, bean.name)
   }
@@ -25,12 +25,13 @@ object TaskHandler {
       .setValue(taskId)
       .build
 
-  private def createDockerInfo(dockerEntity: DockerEntity): DockerInfo =
+  private def createDockerInfo(bean: Bean): DockerInfo =
     DockerInfo.newBuilder
-      .setImage(dockerEntity.image)
+      .setImage(bean.dockerEntity.image)
       .setForcePullImage(true)
-      .addAllPortMappings(dockerEntity.resource.ports.map(dockerPortToPortMapping).asJava)
-      .setNetwork(dockerNetwork(dockerEntity.network))
+      .addParameters(Parameter.newBuilder().setKey("dns").setValue(bean.hostname.getOrElse("8.8.8.8")).build())
+      .addAllPortMappings(bean.dockerEntity.resource.ports.map(dockerPortToPortMapping).asJava)
+      .setNetwork(dockerNetwork(bean.dockerEntity.network))
       .build
 
   private def dockerNetwork(network: String): Network = network match {
