@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 /**
   * Created by victor on 4/2/17.
   */
-trait Config {
+trait HttpConfig {
   private val config = ConfigFactory.load()
   private val httpConfig = config.getConfig("http")
   val httpInterface: String = httpConfig.getString("interface")

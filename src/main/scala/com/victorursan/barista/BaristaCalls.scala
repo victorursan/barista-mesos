@@ -1,15 +1,14 @@
 package com.victorursan.barista
 
-import java.net.URI
-import java.util.function.Function
-import java.util.{Optional, UUID}
+import java.util.Optional
 
 import com.google.protobuf.ByteString
 import com.mesosphere.mesos.rx.java.protobuf.{ProtobufMesosClientBuilder, SchedulerCalls}
-import com.mesosphere.mesos.rx.java.util.UserAgentEntry
+import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.mesosphere.mesos.rx.java.{AwaitableSubscription, SinkOperation, SinkOperations}
 import com.victorursan.mesos.MesosSchedulerCalls
 import com.victorursan.state.Bean
+import com.victorursan.utils.MesosConf
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.{AgentID, FrameworkID, Offer, OfferID}
 import org.apache.mesos.v1.scheduler.Protos.Call.Type._
@@ -24,26 +23,24 @@ import scala.collection.JavaConverters._
 /**
   * Created by victor on 4/10/17.
   */
-object BaristaCalls extends MesosSchedulerCalls {
-  private val fwName = "Barista"
-  private val fwId = s"$fwName-${UUID.randomUUID}"
+object BaristaCalls extends MesosSchedulerCalls with MesosConf{
   private val publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = PublishSubject.create[Optional[SinkOperation[Call]]]().toSerialized
   private var frameworkID = FrameworkID.newBuilder
-    .setValue(fwId)
+    .setValue(frameworkId)
     .build()
   private var openStream: AwaitableSubscription = null
 
-  override def subscribe(mesosMaster: URI, frameworkName: String, failoverTimeout: Double, mesosRole: String, applicationUserAgentEntry: Function[Class[_], UserAgentEntry], frameworkId: String): Unit = {
+  override def subscribe(): Unit = {
     val clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos
-      .mesosUri(mesosMaster)
-      .applicationUserAgentEntry(applicationUserAgentEntry)
+      .mesosUri(mesosUri)
+      .applicationUserAgentEntry(UserAgentEntries.literal(userAEName, userAEVersion))
     val subscribeCall: Call = SchedulerCalls.subscribe(
       frameworkID,
       Protos.FrameworkInfo.newBuilder()
         .setId(frameworkID)
-        .setUser("root")
-        .setName(fwName)
-        .setFailoverTimeout(9)
+        .setUser(user)
+        .setName(frameworkName)
+        .setFailoverTimeout(failoverTimeout)
         .build())
 
 

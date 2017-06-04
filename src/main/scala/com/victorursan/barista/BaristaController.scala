@@ -1,12 +1,8 @@
 package com.victorursan.barista
 
-import java.net.URI
-import java.util.UUID
-
 import akka.actor.ActorSystem
-import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.victorursan.state._
-import com.victorursan.utils.JsonSupport
+import com.victorursan.utils.{JsonSupport, MesosConf}
 import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos.{OfferID, TaskID}
 import spray.json._
@@ -18,11 +14,7 @@ import scala.language.postfixOps
 /**
   * Created by victor on 4/2/17.
   */
-class BaristaController extends JsonSupport {
-  private val fwName = "Barista"
-  private val fwId = s"$fwName-${UUID.randomUUID}"
-  private val mesosUri = URI.create("http://10.1.1.11:5050/api/v1/scheduler")
-  private val role = "*"
+class BaristaController extends JsonSupport with MesosConf {
   private implicit val system: ActorSystem = ActorSystem("Barista-controller-actor-system")
   private implicit val ec: ExecutionContext = system.dispatcher
 
@@ -51,7 +43,7 @@ class BaristaController extends JsonSupport {
         StateController.removeFromOffer(offers.map(_.id))
       }
     }
-    BaristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
+    BaristaCalls.subscribe()
   }
 
   def launchRawBean(rawBean: RawBean): JsValue = {
@@ -66,7 +58,7 @@ class BaristaController extends JsonSupport {
     val scaleQuantity = similarBeans.size - scaleBean.amount
     if (scaleQuantity > 0) { //kill some
       val tasks = StateController.addToKill(similarBeans.take(scaleQuantity).map(_.taskId))
-        killTask(tasks)
+      killTask(tasks)
     } else if (scaleQuantity < 0) { //add some
       similarBeans.headOption.foreach(bean =>
         StateController.addToAccept(
@@ -110,26 +102,25 @@ class BaristaController extends JsonSupport {
       }.reduce(_ ++ _)
       .toJson
 
-
-  def killTask(tasksId: Set[String]): JsValue = {
-//    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
-    val tasks = StateController.addToKill(tasksId)
-    for (task <- tasks) {
-      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
-    }
-    tasks toJson
-  }
-
   def availableOffers: JsValue = StateController.availableOffers toJson
 
   def teardown(): String = {
     killTask(StateController.runningUnpacked.map(_.taskId))
     system.scheduler.schedule(1 seconds, 4 seconds) {
-      if (StateController.tasksToKill.isEmpty){ //todo this will throw an error after the first true
-      BaristaCalls.teardown()
-      StateController.clean()
+      if (StateController.tasksToKill.isEmpty) { //todo this will throw an error after the first true
+        BaristaCalls.teardown()
+        StateController.clean()
       }
     }
     "We are closed"
+  }
+
+  def killTask(tasksId: Set[String]): JsValue = {
+    //    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
+    val tasks = StateController.addToKill(tasksId)
+    for (task <- tasks) {
+      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
+    }
+    tasks toJson
   }
 }

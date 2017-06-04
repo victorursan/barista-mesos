@@ -1,10 +1,6 @@
 package com.victorursan.mesos
 
-import java.net.URI
-import java.util.function.Function
-
 import com.google.protobuf.ByteString
-import com.mesosphere.mesos.rx.java.util.UserAgentEntry
 import com.victorursan.state.Bean
 import org.apache.mesos.v1.Protos
 import org.apache.mesos.v1.Protos.Offer.Operation
@@ -15,7 +11,7 @@ import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile
   * Created by victor on 4/10/17.
   */
 trait MesosSchedulerCalls {
-  def subscribe(mesosMaster: URI, frameworkName: String, failoverTimeout: Double, mesosRole: String, applicationUserAgentEntry: Function[Class[_], UserAgentEntry], frameworkId: String): Unit
+  def subscribe(): Unit
 
   def teardown(): Unit
 

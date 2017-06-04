@@ -25,7 +25,7 @@ libraryDependencies ++= {
   val Mesos = "1.2.0"
   val Spray = "1.3.3"
   val RxScala = "0.26.5"
-  val RxJavaMesos = "0.1.2-SNAPSHOT"
+  val RxJavaMesos = "0.1.2"
   val Curator = "2.12.0"
   val Specs2 = "3.8.9"
 

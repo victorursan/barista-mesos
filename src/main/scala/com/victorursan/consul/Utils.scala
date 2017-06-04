@@ -13,11 +13,10 @@ import scala.collection.JavaConverters._
 object Utils {
 
   def convertBeanToService(bean: Bean, servicePort: Int): BaristaService =
-    BaristaService(bean.taskId, bean.name, serviceAddress = bean.hostname.get, servicePort = servicePort,
+    BaristaService(bean.taskId, bean.pack.map(p => s"$p-${bean.name}").getOrElse(bean.name), serviceAddress = bean.hostname.get, servicePort = servicePort,
       checks = bean.checks.map(bc => BaristaCheck(new URL(s"http://${bean.hostname.get}:$servicePort${bc.httpPath}"), bc.interval)))
 
   def convertOffers(mesosOffers: Iterable[Protos.Offer]): Iterable[Offer] = mesosOffers.map(convertOffer)
-
 
   def convertOffer(mesosOffer: Protos.Offer): Offer = {
     val id = mesosOffer.getId.getValue
@@ -27,7 +26,7 @@ object Utils {
     val cpu = cpusFromOffer(mesosOffer)
     val ports = portsFromOffer(mesosOffer)
 
-    Offer(id=id, agentId = agentId, hostname = hostname, mem = mem, cpu = cpu, ports = ports)
+    Offer(id, agentId, hostname, mem, cpu, ports)
   }
 
   private def memFromOffer(mesosOffer: Protos.Offer): Double =

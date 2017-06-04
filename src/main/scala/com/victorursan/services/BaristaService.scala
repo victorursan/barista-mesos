@@ -5,7 +5,6 @@ import java.lang.management.ManagementFactory
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
 import com.victorursan.state.{Pack, RawBean, ScaleBean}
-import com.victorursan.utils.Config
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -16,7 +15,7 @@ import scala.language.postfixOps
 /**
   * Created by victor on 4/2/17.
   */
-trait BaristaService extends BaseService with Config {
+trait BaristaService extends BaseService {
   protected val serviceName = "BaristaService"
   private val log = LoggerFactory.getLogger(classOf[BaristaService])
   private val baristaController: BaristaController = new BaristaController
