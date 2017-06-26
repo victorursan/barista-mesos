@@ -8,6 +8,7 @@ trait MesosConf {
   private val config = ConfigFactory.load("barista.conf")
   private val mesosConfig = config.getConfig("mesos")
   private val userAEConfig = config.getConfig("userAgentEntries")
+  private val schedulerConfig = config.getConfig("scheduler")
 
   val frameworkName: String = mesosConfig.getString("frameworkName")
   val frameworkId: String = mesosConfig.getString("frameworkId")
@@ -18,4 +19,7 @@ trait MesosConf {
 
   val userAEName: String = userAEConfig.getString("name")
   val userAEVersion: String = userAEConfig.getString("version")
+
+  val schedulerTWindow: Int = schedulerConfig.getInt("timeWindow")
+  val schedulerAlgorithm: String = schedulerConfig.getString("algorithm")
 }

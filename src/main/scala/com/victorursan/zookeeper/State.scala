@@ -1,6 +1,6 @@
 package com.victorursan.zookeeper
 
-import com.victorursan.state.{Bean, BeanDocker, Offer}
+import com.victorursan.state.{AgentResources, Bean, BeanDocker, Offer}
 import org.apache.mesos.v1.Protos.TaskID
 
 
@@ -74,5 +74,9 @@ trait State {
   def availableBeanDocker: Set[BeanDocker]
 
   def availableOffers: Set[Offer]
+
+  def agentResources: Map[String, AgentResources]
+
+  def updateAgentResources(agentResources: Map[String, AgentResources]): Map[String, AgentResources]
 
 }

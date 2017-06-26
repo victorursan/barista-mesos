@@ -23,7 +23,7 @@ import scala.collection.JavaConverters._
 /**
   * Created by victor on 4/10/17.
   */
-object BaristaCalls extends MesosSchedulerCalls with MesosConf{
+object BaristaCalls extends MesosSchedulerCalls with MesosConf {
   private val publishSubject: SerializedSubject[Optional[SinkOperation[Call]], Optional[SinkOperation[Call]]] = PublishSubject.create[Optional[SinkOperation[Call]]]().toSerialized
   private var frameworkID = FrameworkID.newBuilder
     .setValue(frameworkId)
@@ -32,7 +32,7 @@ object BaristaCalls extends MesosSchedulerCalls with MesosConf{
 
   override def subscribe(): Unit = {
     val clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos
-      .mesosUri(mesosUri)
+      .mesosUri(mesosUri.resolve("api/v1/scheduler"))
       .applicationUserAgentEntry(UserAgentEntries.literal(userAEName, userAEVersion))
     val subscribeCall: Call = SchedulerCalls.subscribe(
       frameworkID,
@@ -42,7 +42,6 @@ object BaristaCalls extends MesosSchedulerCalls with MesosConf{
         .setName(frameworkName)
         .setFailoverTimeout(failoverTimeout)
         .build())
-
 
 
     openStream = clientBuilder

@@ -1,13 +1,11 @@
 package com.victorursan.barista
 
 import com.victorursan.state.{Bean, DockerPort, Offer, ScheduleState}
+import com.victorursan.zookeeper.StateController
 
-
-/**
-  * Created by victor on 5/3/17.
-  */
-object BaristaScheduler extends Scheduler {
+object RoundRobinScheduler extends Scheduler {
   override def schedule(beans: Set[Bean], offers: List[Offer]): ScheduleState = {
+    StateController.agentResources
     var remainingOffers = offers
     var acceptOffers = Set[(Bean, String)]()
     var scheduledBeans = Set[Bean]()
@@ -50,5 +48,4 @@ object BaristaScheduler extends Scheduler {
       None
     }
   }
-
 }

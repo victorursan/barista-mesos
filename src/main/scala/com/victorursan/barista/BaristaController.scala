@@ -20,15 +20,17 @@ class BaristaController extends JsonSupport with MesosConf {
 
 
   def start(): Unit = {
+
     if (StateController.availableOffers.nonEmpty) {
       StateController.cleanOffers()
     }
-    system.scheduler.schedule(1 seconds, 4 seconds) {
+    BaristaCalls.subscribe()
+    system.scheduler.schedule(1 seconds, schedulerTWindow seconds) {
       val beans = StateController.awaitingBeans
       val offers = StateController.availableOffers
 
       if (offers.nonEmpty && beans.nonEmpty) {
-        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers.toList)
+        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.schedule(beans, offers.toList)
 
         StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
         StateController.removeFromAccept(consumedBeans)
@@ -43,7 +45,6 @@ class BaristaController extends JsonSupport with MesosConf {
         StateController.removeFromOffer(offers.map(_.id))
       }
     }
-    BaristaCalls.subscribe()
   }
 
   def launchRawBean(rawBean: RawBean): JsValue = {
@@ -111,6 +112,7 @@ class BaristaController extends JsonSupport with MesosConf {
         BaristaCalls.teardown()
         StateController.clean()
       }
+
     }
     "We are closed"
   }

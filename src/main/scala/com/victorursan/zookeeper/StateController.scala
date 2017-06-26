@@ -2,10 +2,11 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, BeanDocker, Offer, Pack}
+import com.victorursan.state._
 import com.victorursan.utils.JsonSupport
 import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
+
 import scala.util.Try
 
 /**
@@ -24,6 +25,9 @@ object StateController extends JsonSupport with State {
   private val killingPath = s"$basePath/killing"
   private val overviewPath = s"$basePath/overview"
   private val beanDockerPath = s"$basePath/beanDocker"
+  private val agentResourcesPath = s"$basePath/agentResources"
+  private val schedulerPath = s"$basePath/scheduler"
+  private val roundRobinPath = s"$schedulerPath/roundRobin"
 
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
@@ -184,6 +188,34 @@ object StateController extends JsonSupport with State {
       .parseJson
       .convertTo[Set[BeanDocker]])
       .getOrElse(Set())
+
+  override def agentResources: Map[String, AgentResources] =
+    Try(new String(CuratorService.read(agentResourcesPath))
+      .parseJson
+      .convertTo[Map[String, AgentResources]])
+      .getOrElse(Map())
+
+  override def updateAgentResources(agentResources: Map[String, AgentResources]): Map[String, AgentResources] = {
+    CuratorService.createOrUpdate(agentResourcesPath, agentResources.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    agentResources
+  }
+
+  def roundRobinIndex: Int =
+    Try(new String(CuratorService.read(roundRobinPath))
+      .parseJson
+      .convertTo[Int])
+      .getOrElse(0)
+
+  def updateRoundRobinIndex(index: Int): Int = {
+    CuratorService.createOrUpdate(roundRobinPath, index.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    index
+  }
+
+  def incRoundRobinIndex: Int = {
+    val incrementedValue = roundRobinIndex + 1
+    CuratorService.createOrUpdate(roundRobinPath, incrementedValue.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    incrementedValue
+  }
 
   def clean(): Unit = CuratorService.delete(basePath)
 

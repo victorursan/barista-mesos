@@ -30,6 +30,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedOffers(messosOffers: List[Offer]): Unit = {
     println("receivedOffers: " + messosOffers)
+    MesosController.checkAgents(messosOffers.map(_.getAgentId))
     val offers = Utils.convertOffers(messosOffers)
     StateController.addToOffer(offers.toSet)
   }
@@ -89,7 +90,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedMessage(message: Message): Unit = log.info("receivedMessage", message)
 
-  override def receivedFailure(failure: Failure): Unit = log.error("receivedError", failure)
+  override def receivedFailure(failure: Failure): Unit = log.error("receivedError", failure) //todo delete from agentresources 
 
   override def receivedError(error: Error): Unit = log.error("receivedError", error)
 
