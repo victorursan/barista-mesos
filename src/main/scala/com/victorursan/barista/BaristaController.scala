@@ -24,16 +24,16 @@ class BaristaController extends JsonSupport with MesosConf {
     if (StateController.availableOffers.nonEmpty) {
       StateController.cleanOffers()
     }
-    BaristaCalls.subscribe()
-    system.scheduler.schedule(1 seconds, schedulerTWindow seconds) {
+    system.scheduler.schedule(1 seconds, 4 seconds) {
       val beans = StateController.awaitingBeans
       val offers = StateController.availableOffers
 
       if (offers.nonEmpty && beans.nonEmpty) {
-        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.schedule(beans, offers.toList)
+        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = schedulerAlgorithm.schedule(beans, offers.toList)
+//        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.schedule(beans, offers.toList)
 
         StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
-        StateController.removeFromAccept(consumedBeans)
+        StateController.removeFromAccept(beans.filter(bean => consumedBeans.contains(bean.taskId)))
         scheduledBeans.foreach { case (bean: Bean, offerID: String) => BaristaCalls.acceptContainer(bean, offerID) }
 
         //        val newBeans = beans.map(bean => bean.copy(agentId = Some(offers.head.agentId)))
@@ -43,8 +43,13 @@ class BaristaController extends JsonSupport with MesosConf {
         BaristaCalls.decline(canceledOffers.map(off => OfferID.newBuilder().setValue(off.id).build()))
 
         StateController.removeFromOffer(offers.map(_.id))
+      } else {
+        BaristaCalls.decline(offers.map(off => OfferID.newBuilder().setValue(off.id).build()))
+        StateController.removeFromOffer(offers.map(_.id))
       }
     }
+    BaristaCalls.subscribe()
+
   }
 
   def launchRawBean(rawBean: RawBean): JsValue = {
@@ -107,7 +112,7 @@ class BaristaController extends JsonSupport with MesosConf {
 
   def teardown(): String = {
     killTask(StateController.runningUnpacked.map(_.taskId))
-    system.scheduler.schedule(1 seconds, 4 seconds) {
+    system.scheduler.schedule(1 seconds, 2 seconds) {
       if (StateController.tasksToKill.isEmpty) { //todo this will throw an error after the first true
         BaristaCalls.teardown()
         StateController.clean()
@@ -118,7 +123,7 @@ class BaristaController extends JsonSupport with MesosConf {
   }
 
   def killTask(tasksId: Set[String]): JsValue = {
-    //    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
+    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
     val tasks = StateController.addToKill(tasksId)
     for (task <- tasks) {
       BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())

@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets
 
 import com.victorursan.state._
 import com.victorursan.utils.JsonSupport
-import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
 
 import scala.util.Try
@@ -88,7 +87,7 @@ object StateController extends JsonSupport with State {
   override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
 
   override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
-    val newRunning = runningUnpacked diff beans
+    val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
     CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
     newRunning
   }

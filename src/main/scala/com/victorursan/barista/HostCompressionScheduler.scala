@@ -8,11 +8,11 @@ object HostCompressionScheduler extends Scheduler {
     StateController.agentResources
     var remainingOffers = offers
     var acceptOffers = Set[(Bean, String)]()
-    var scheduledBeans = Set[Bean]()
+    var scheduledBeans = Set[String]()
     for (bean <- beans) {
       scheduleBean(bean, remainingOffers).foreach { case (portBean, offer) =>
         remainingOffers = remainingOffers.filterNot(_.equals(offer))
-        scheduledBeans = scheduledBeans + bean
+        scheduledBeans = scheduledBeans + bean.taskId
         acceptOffers = acceptOffers + (portBean.copy(agentId = Some(offer.agentId), hostname = Some(offer.hostname)) -> offer.id)
       }
     }
@@ -32,20 +32,20 @@ object HostCompressionScheduler extends Scheduler {
       }
   }
 
-  private def beanWithHostPort(bean: Bean, mesosOffer: Offer): Option[Bean] = {
-    val hostPorts = mesosOffer.ports.toStream.flatten
-    val oldBeanPorts = bean.dockerEntity.resource.ports.groupBy(_.hostPort.isDefined)
-    val portsToBeAssign = oldBeanPorts.getOrElse(false, List())
-    val assignedPorts = hostPorts.take(portsToBeAssign.length).toList
-      .zip(portsToBeAssign)
-      .map { case (hostPort: Int, dockerPort: DockerPort) => dockerPort.copy(hostPort = Some(hostPort)) }
-    if (assignedPorts.length == portsToBeAssign.length) {
-      Some(bean.copy(dockerEntity =
-        bean.dockerEntity.copy(resource =
-          bean.dockerEntity.resource.copy(ports =
-            assignedPorts ++ oldBeanPorts.getOrElse(true, List())))))
-    } else {
-      None
-    }
-  }
+//  private def beanWithHostPort(bean: Bean, mesosOffer: Offer): Option[Bean] = {
+//    val hostPorts = mesosOffer.ports.toStream.flatten
+//    val oldBeanPorts = bean.dockerEntity.resource.ports.groupBy(_.hostPort.isDefined)
+//    val portsToBeAssign = oldBeanPorts.getOrElse(false, List())
+//    val assignedPorts = hostPorts.take(portsToBeAssign.length).toList
+//      .zip(portsToBeAssign)
+//      .map { case (hostPort: Int, dockerPort: DockerPort) => dockerPort.copy(hostPort = Some(hostPort)) }
+//    if (assignedPorts.length == portsToBeAssign.length) {
+//      Some(bean.copy(dockerEntity =
+//        bean.dockerEntity.copy(resource =
+//          bean.dockerEntity.resource.copy(ports =
+//            assignedPorts ++ oldBeanPorts.getOrElse(true, List())))))
+//    } else {
+//      None
+//    }
+//  }
 }

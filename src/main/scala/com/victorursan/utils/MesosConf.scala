@@ -3,8 +3,14 @@ package com.victorursan.utils
 import java.net.URI
 
 import com.typesafe.config.ConfigFactory
+import com.victorursan.barista.{EvenOutScheduler, HostCompressionScheduler, RoundRobinScheduler, Scheduler}
 
 trait MesosConf {
+  val schedulerAlgorithms: Map[String, Scheduler] =
+    Map(
+      "round-robin" -> RoundRobinScheduler,
+      "host-compression" -> HostCompressionScheduler,
+      "even-out" -> EvenOutScheduler)
   private val config = ConfigFactory.load("barista.conf")
   private val mesosConfig = config.getConfig("mesos")
   private val userAEConfig = config.getConfig("userAgentEntries")
@@ -21,5 +27,8 @@ trait MesosConf {
   val userAEVersion: String = userAEConfig.getString("version")
 
   val schedulerTWindow: Int = schedulerConfig.getInt("timeWindow")
-  val schedulerAlgorithm: String = schedulerConfig.getString("algorithm")
+  private val schedulerAlgorithmStr: String = schedulerConfig.getString("algorithm")
+  val schedulerResource: String = schedulerConfig.getString("resource")
+  val schedulerAlgorithm: Scheduler = schedulerAlgorithms(schedulerAlgorithmStr)
 }
+
