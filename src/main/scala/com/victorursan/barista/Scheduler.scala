@@ -1,8 +1,9 @@
 package com.victorursan.barista
 
 import com.victorursan.state.{Bean, DockerPort, Offer, ScheduleState}
+import com.victorursan.utils.MesosConf
 
-trait Scheduler {
+trait Scheduler extends MesosConf  {
   def schedule(beans: Set[Bean], offers: List[Offer]): ScheduleState
 
   protected def resolveBeanWithHost(bean: Bean, mesosOffer: Offer): Option[Bean] = {
@@ -15,7 +16,7 @@ trait Scheduler {
     }
   }
 
-  protected def beanWithHostPort(bean: Bean, mesosOffer: Offer): Option[Bean] = {
+  private def beanWithHostPort(bean: Bean, mesosOffer: Offer): Option[Bean] = {
     val hostPorts = mesosOffer.ports.toStream.flatten
     val oldBeanPorts = bean.dockerEntity.resource.ports.groupBy(_.hostPort.isDefined)
     val portsToBeAssign = oldBeanPorts.getOrElse(false, List())

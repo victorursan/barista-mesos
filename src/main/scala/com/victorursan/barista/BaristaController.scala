@@ -24,13 +24,12 @@ class BaristaController extends JsonSupport with MesosConf {
     if (StateController.availableOffers.nonEmpty) {
       StateController.cleanOffers()
     }
-    system.scheduler.schedule(1 seconds, 4 seconds) {
+    system.scheduler.schedule(1 seconds, schedulerTWindow seconds) {
       val beans = StateController.awaitingBeans
       val offers = StateController.availableOffers
 
       if (offers.nonEmpty && beans.nonEmpty) {
         val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = schedulerAlgorithm.schedule(beans, offers.toList)
-//        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.schedule(beans, offers.toList)
 
         StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
         StateController.removeFromAccept(beans.filter(bean => consumedBeans.contains(bean.taskId)))
