@@ -2,10 +2,10 @@ package com.victorursan.zookeeper
 
 import java.nio.charset.StandardCharsets
 
-import com.victorursan.state.{Bean, BeanDocker, Offer, Pack}
+import com.victorursan.state._
 import com.victorursan.utils.JsonSupport
-import org.apache.mesos.v1.Protos.TaskID
 import spray.json._
+
 import scala.util.Try
 
 /**
@@ -24,6 +24,9 @@ object StateController extends JsonSupport with State {
   private val killingPath = s"$basePath/killing"
   private val overviewPath = s"$basePath/overview"
   private val beanDockerPath = s"$basePath/beanDocker"
+  private val agentResourcesPath = s"$basePath/agentResources"
+  private val schedulerPath = s"$basePath/scheduler"
+  private val roundRobinPath = s"$schedulerPath/roundRobin"
 
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
@@ -84,7 +87,7 @@ object StateController extends JsonSupport with State {
   override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
 
   override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
-    val newRunning = runningUnpacked diff beans
+    val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
     CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
     newRunning
   }
@@ -117,27 +120,26 @@ object StateController extends JsonSupport with State {
       .convertTo[Set[Bean]])
       .getOrElse(Set())
 
-  override def addToKill(taskID: TaskID): Set[TaskID] = {
-    val newTasksKill = tasksToKill + taskID
-    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+  override def addToKill(taskID: String): Set[String] = addToKill(Set(taskID))
+
+  override def addToKill(tasksID: Set[String]): Set[String] = {
+    val newTasksKill = tasksToKill ++ tasksID
+    CuratorService.createOrUpdate(killingPath, newTasksKill.toJson.toString().getBytes)
     newTasksKill
   }
 
-  override def removeFromKill(taskID: TaskID): Set[TaskID] = removeFromKill(Set(taskID))
+  override def removeFromKill(taskID: String): Set[String] = removeFromKill(Set(taskID))
 
-  override def removeFromKill(taskIDs: Set[TaskID]): Set[TaskID] = {
+  override def removeFromKill(taskIDs: Set[String]): Set[String] = {
     val newTasksKill = tasksToKill diff taskIDs
-    CuratorService.createOrUpdate(killingPath, newTasksKill.map(_.getValue).toJson.toString().getBytes)
+    CuratorService.createOrUpdate(killingPath, newTasksKill.toJson.toString().getBytes)
     newTasksKill
   }
 
-  override def tasksToKill: Set[TaskID] =
+  override def tasksToKill: Set[String] =
     Try(new String(CuratorService.read(killingPath))
       .parseJson
-      .convertTo[Set[String]]
-      .map(TaskID.newBuilder()
-        .setValue(_)
-        .build()))
+      .convertTo[Set[String]])
       .getOrElse(Set())
 
 
@@ -185,6 +187,34 @@ object StateController extends JsonSupport with State {
       .parseJson
       .convertTo[Set[BeanDocker]])
       .getOrElse(Set())
+
+  override def agentResources: Map[String, AgentResources] =
+    Try(new String(CuratorService.read(agentResourcesPath))
+      .parseJson
+      .convertTo[Map[String, AgentResources]])
+      .getOrElse(Map())
+
+  override def updateAgentResources(agentResources: Map[String, AgentResources]): Map[String, AgentResources] = {
+    CuratorService.createOrUpdate(agentResourcesPath, agentResources.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    agentResources
+  }
+
+  def roundRobinIndex: Int =
+    Try(new String(CuratorService.read(roundRobinPath))
+      .parseJson
+      .convertTo[Int])
+      .getOrElse(0)
+
+  def updateRoundRobinIndex(index: Int): Int = {
+    CuratorService.createOrUpdate(roundRobinPath, index.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    index
+  }
+
+  def incRoundRobinIndex: Int = {
+    val incrementedValue = roundRobinIndex + 1
+    CuratorService.createOrUpdate(roundRobinPath, incrementedValue.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    incrementedValue
+  }
 
   def clean(): Unit = CuratorService.delete(basePath)
 

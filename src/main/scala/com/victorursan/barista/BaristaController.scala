@@ -1,12 +1,8 @@
 package com.victorursan.barista
 
-import java.net.URI
-import java.util.UUID
-
 import akka.actor.ActorSystem
-import com.mesosphere.mesos.rx.java.util.UserAgentEntries
 import com.victorursan.state._
-import com.victorursan.utils.JsonSupport
+import com.victorursan.utils.{JsonSupport, MesosConf}
 import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos.{OfferID, TaskID}
 import spray.json._
@@ -18,46 +14,70 @@ import scala.language.postfixOps
 /**
   * Created by victor on 4/2/17.
   */
-class BaristaController extends JsonSupport {
-  private val fwName = "Barista"
-  private val fwId = s"$fwName-${UUID.randomUUID}"
-  private val mesosUri = URI.create("http://10.1.1.11:5050/api/v1/scheduler")
-  private val role = "*"
+class BaristaController extends JsonSupport with MesosConf {
   private implicit val system: ActorSystem = ActorSystem("Barista-controller-actor-system")
   private implicit val ec: ExecutionContext = system.dispatcher
 
 
   def start(): Unit = {
+
     if (StateController.availableOffers.nonEmpty) {
-    StateController.cleanOffers()
+      StateController.cleanOffers()
     }
-    system.scheduler.schedule(1 seconds, 4 seconds) {
+    system.scheduler.schedule(1 seconds, schedulerTWindow seconds) {
       val beans = StateController.awaitingBeans
       val offers = StateController.availableOffers
 
       if (offers.nonEmpty && beans.nonEmpty) {
-        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = BaristaScheduler.scheduleBeans(beans, offers.toList)
+        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = schedulerAlgorithm.schedule(beans, offers.toList)
 
         StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
-        StateController.removeFromAccept(consumedBeans)
+        StateController.removeFromAccept(beans.filter(bean => consumedBeans.contains(bean.taskId)))
         scheduledBeans.foreach { case (bean: Bean, offerID: String) => BaristaCalls.acceptContainer(bean, offerID) }
 
-//        val newBeans = beans.map(bean => bean.copy(agentId = Some(offers.head.agentId)))
-//        BaristaCalls.acceptContainers(newBeans, offers.head.id)
-//
-//        BaristaCalls.decline(List(OfferID.newBuilder().setValue(offers.tail.head.id).build()))
+        //        val newBeans = beans.map(bean => bean.copy(agentId = Some(offers.head.agentId)))
+        //        BaristaCalls.acceptContainers(newBeans, offers.head.id)
+        //
+        //        BaristaCalls.decline(List(OfferID.newBuilder().setValue(offers.tail.head.id).build()))
         BaristaCalls.decline(canceledOffers.map(off => OfferID.newBuilder().setValue(off.id).build()))
 
         StateController.removeFromOffer(offers.map(_.id))
+      } else {
+        BaristaCalls.decline(offers.map(off => OfferID.newBuilder().setValue(off.id).build()))
+        StateController.removeFromOffer(offers.map(_.id))
       }
     }
-    BaristaCalls.subscribe(mesosUri, fwName, 10, role, UserAgentEntries.literal("com.victorursan", "barista"), fwId)
+    BaristaCalls.subscribe()
+
   }
 
   def launchRawBean(rawBean: RawBean): JsValue = {
     val taskId = StateController.getNextId
     val beans = StateController.addToAccept(rawBean.toBean(taskId))
     beans.toJson
+  }
+
+  def scaleBean(scaleBean: ScaleBean): JsValue = {
+    val similarBeans = StateController.runningUnpacked.filter(bean => bean.pack.equals(scaleBean.pack) && bean.name.equalsIgnoreCase(scaleBean.name))
+    //todo what happens if there is no similar beans? ( as in count 0 )
+    val scaleQuantity = similarBeans.size - scaleBean.amount
+    if (scaleQuantity > 0) { //kill some
+      val tasks = StateController.addToKill(similarBeans.take(scaleQuantity).map(_.taskId))
+      killTask(tasks)
+    } else if (scaleQuantity < 0) { //add some
+      similarBeans.headOption.foreach(bean =>
+        StateController.addToAccept(
+          (1 to -scaleQuantity)
+            .map(_ => {
+              bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
+                resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
+              ))
+
+            })
+            .toSet)
+      )
+    }
+    scaleBean.toJson
   }
 
   def launchPack(pack: Pack): JsValue = {
@@ -80,22 +100,33 @@ class BaristaController extends JsonSupport {
     StateController.runningUnpacked.toJson
 
   def runningTasksCount(): JsValue =
-    StateController.runningUnpacked.groupBy(_.name).mapValues(_.size).toJson
-
-  def killTask(taskId: String): JsValue = {
-    StateController.runningUnpacked.find(_.taskId.equalsIgnoreCase(taskId)).foreach(StateController.removeRunningUnpacked)
-    val tasks = StateController.addToKill(TaskID.newBuilder().setValue(taskId).build())
-    for (task <- tasks) {
-      BaristaCalls.kill(task)
-    }
-    tasks.map(_.getValue) toJson
-  }
+    StateController.runningUnpacked.groupBy(_.pack)
+      .map {
+        case (Some(pack), beans) => Map(pack -> beans.groupBy(_.name).mapValues(_.size).toJson)
+        case (None, beans) => beans.groupBy(_.name).mapValues(_.size.toJson)
+      }.reduce(_ ++ _)
+      .toJson
 
   def availableOffers: JsValue = StateController.availableOffers toJson
 
   def teardown(): String = {
-    BaristaCalls.teardown()
-    StateController.clean()
+    killTask(StateController.runningUnpacked.map(_.taskId))
+    system.scheduler.schedule(1 seconds, 2 seconds) {
+      if (StateController.tasksToKill.isEmpty) { //todo this will throw an error after the first true
+        BaristaCalls.teardown()
+        StateController.clean()
+      }
+
+    }
     "We are closed"
+  }
+
+  def killTask(tasksId: Set[String]): JsValue = {
+    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
+    val tasks = StateController.addToKill(tasksId)
+    for (task <- tasks) {
+      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
+    }
+    tasks toJson
   }
 }

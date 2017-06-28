@@ -30,6 +30,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedOffers(messosOffers: List[Offer]): Unit = {
     println("receivedOffers: " + messosOffers)
+    MesosController.checkAgents(messosOffers.map(_.getAgentId))
     val offers = Utils.convertOffers(messosOffers)
     StateController.addToOffer(offers.toSet)
   }
@@ -58,7 +59,8 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
         case TaskState.TASK_KILLED =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
-            StateController.tasksToKill.find(t => t.getValue.equals(taskId)).foreach(StateController.removeFromKill)
+            StateController.removeRunningUnpacked(scheduledBean)
+            StateController.tasksToKill.find(t => t.equals(taskId)).foreach(StateController.removeFromKill)
             StateController.removeFromBeanDocker(taskId)
           })
         case TaskState.TASK_RUNNING =>
@@ -74,11 +76,13 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
                 StateController.addToBeanDocker(beanDocker)
                 DockerController
                   .registerBeanDocker(beanDocker)
-                  .subscribe(dockersta => println(dockersta))
+                  .subscribe(dockerista => Unit
+//todo                    println(dockerista)
+                  )
                 })
             ServiceController.registerService(baristaService.serviceAddress, baristaService) // todo
           })
-        case e => print(s"it's something $e \n")
+        case e => println(s"it's something $e \n")
       }
       print(StateController.addToOverview(taskId, update.toString).toString())
     }
@@ -86,7 +90,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   override def receivedMessage(message: Message): Unit = log.info("receivedMessage", message)
 
-  override def receivedFailure(failure: Failure): Unit = log.error("receivedError", failure)
+  override def receivedFailure(failure: Failure): Unit = log.error("receivedError", failure) //todo delete from agentresources 
 
   override def receivedError(error: Error): Unit = log.error("receivedError", error)
 
