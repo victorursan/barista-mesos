@@ -1,20 +1,23 @@
 package com.victorursan.barista
 
 import akka.actor.ActorSystem
+import com.victorursan.barista.scheduler.HostCompressionScheduler
 import com.victorursan.state._
 import com.victorursan.utils.{JsonSupport, MesosConf}
 import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos.{OfferID, TaskID}
 import spray.json._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by victor on 4/2/17.
   */
 class BaristaController extends JsonSupport with MesosConf {
+
   private implicit val system: ActorSystem = ActorSystem("Barista-controller-actor-system")
   private implicit val ec: ExecutionContext = system.dispatcher
 
@@ -29,7 +32,9 @@ class BaristaController extends JsonSupport with MesosConf {
       val offers = StateController.availableOffers
 
       if (offers.nonEmpty && beans.nonEmpty) {
-        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) = schedulerAlgorithm.schedule(beans, offers.toList)
+
+        val ScheduleState(scheduledBeans, canceledOffers, consumedBeans) =
+          if (StateController.isDefragmenting) HostCompressionScheduler.schedule(beans, offers.toList) else schedulerAlgorithm.schedule(beans, offers.toList)
 
         StateController.addToRunningUnpacked(scheduledBeans.map(_._1))
         StateController.removeFromAccept(beans.filter(bean => consumedBeans.contains(bean.taskId)))
@@ -68,17 +73,17 @@ class BaristaController extends JsonSupport with MesosConf {
       similarBeans.headOption.foreach(bean =>
         StateController.addToAccept(
           (1 to -scaleQuantity)
-            .map(_ => {
-              bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
-                resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
-              ))
-
-            })
+            .map(_ => resetBean(bean))
             .toSet)
       )
     }
     scaleBean.toJson
   }
+
+  def resetBean(bean: Bean): Bean =
+    bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
+      resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
+    ))
 
   def launchPack(pack: Pack): JsValue = {
     val newPack = pack.copy(mix = pack.mix.map(qb => qb.copy(bean = qb.bean.copy(pack = Some(pack.name))))) //set pack name for all rawBeans
@@ -122,11 +127,61 @@ class BaristaController extends JsonSupport with MesosConf {
   }
 
   def killTask(tasksId: Set[String]): JsValue = {
-    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter{(bean: Bean) => tasksId.contains(bean.taskId)})
+    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter { (bean: Bean) => tasksId.contains(bean.taskId) })
     val tasks = StateController.addToKill(tasksId)
     for (task <- tasks) {
       BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
     }
     tasks toJson
   }
+
+  def defragment(): JsValue = {
+    val runningBeans = StateController.runningUnpacked.toList
+    Future{defragment(runningBeans)}
+    "Started the defragmentation process" toJson
+  }
+
+  private def defragment(beans: List[Bean]): Unit = {
+    StateController.setDefragmenting(true)
+    val agentResources = StateController.agentResources
+    var toScheduleBeans: List[Bean] = beans.sortBy(bean =>
+      if (schedulerResource == "mem")
+        (bean.dockerEntity.resource.mem, agentResources(bean.agentId.get).mem)
+      else
+        (bean.dockerEntity.resource.cpu, agentResources(bean.agentId.get).cpus)).reverse
+
+    while (toScheduleBeans.nonEmpty) {
+      val bean = toScheduleBeans.head
+      toScheduleBeans = toScheduleBeans.filterNot(_.taskId == bean.taskId)
+      val resetedBean = resetBean(bean)
+      StateController.addToAccept(resetedBean)
+      waitRunning(resetedBean) match {
+        case Success(newBean) =>
+          toScheduleBeans = toScheduleBeans.filterNot(bbean => bbean.agentId == newBean.agentId)
+          drain(bean)
+          killTask(Set(bean.taskId))
+          Thread.sleep(1000)
+        case _ => None
+      }
+    }
+    StateController.setDefragmenting(false)
+  }
+
+  private def drain(bean: Bean): Try[Bean] = {
+
+    Success(bean)
+  }
+
+  private def waitRunning(bean: Bean): Try[Bean] = {
+    for (_ <- 1 to drainTimeout) {
+      Thread.sleep(1000)
+      val running = StateController.runningUnpacked
+      running.find(_.taskId == bean.taskId)
+        .foreach(bbbbean => {
+          return Success(bbbbean)
+        })
+    }
+    Failure(new Throwable("a"))
+  }
+
 }

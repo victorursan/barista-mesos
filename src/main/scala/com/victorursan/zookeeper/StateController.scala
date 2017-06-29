@@ -27,6 +27,7 @@ object StateController extends JsonSupport with State {
   private val agentResourcesPath = s"$basePath/agentResources"
   private val schedulerPath = s"$basePath/scheduler"
   private val roundRobinPath = s"$schedulerPath/roundRobin"
+  private val defragmentingPath = s"$schedulerPath/defragmenting"
 
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
@@ -215,6 +216,18 @@ object StateController extends JsonSupport with State {
     CuratorService.createOrUpdate(roundRobinPath, incrementedValue.toJson.toString().getBytes(StandardCharsets.UTF_8))
     incrementedValue
   }
+
+  def setDefragmenting(defragmenting: Boolean): Boolean = {
+    CuratorService.createOrUpdate(defragmentingPath, defragmenting.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    defragmenting
+  }
+
+  def isDefragmenting: Boolean =
+    Try(new String(CuratorService.read(defragmentingPath))
+      .parseJson
+      .convertTo[Boolean])
+      .getOrElse(false)
+
 
   def clean(): Unit = CuratorService.delete(basePath)
 

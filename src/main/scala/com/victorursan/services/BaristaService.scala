@@ -75,6 +75,11 @@ trait BaristaService extends BaseService {
             log.info("[GET] /api/task/running/count getting all tasks that should run")
             complete(baristaController.runningTasksCount())
           }
+        } ~ path("defragment") {
+          post {
+            log.info("[POST] /api/task/defragment starts the defragmentation process")
+            complete(baristaController.defragment())
+          }
         }
       } ~ path("overview") {
         get {
