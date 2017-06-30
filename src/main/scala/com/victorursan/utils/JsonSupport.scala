@@ -15,20 +15,27 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val agentResourcesProtocol: RootJsonFormat[AgentResources] = jsonFormat3(AgentResources)
 
   implicit val upgradeBeanProtocol: RootJsonFormat[UpgradeBean] = new RootJsonFormat[UpgradeBean] {
+    private val PACK = "pack"
+    private val NAME = "name"
+    private val NEW_BEAN = "newBean"
+
     override def write(upgradeBean: UpgradeBean): JsValue = {
       JsObject(List(
-        Some("beanId" -> upgradeBean.beanId.toJson),
-        Some("newBean" -> upgradeBean.newBean.toJson)
+        upgradeBean.pack.map(pack => PACK -> pack.toJson),
+        Some(NAME -> upgradeBean.name.toJson),
+        Some(NEW_BEAN -> upgradeBean.newBean.toJson)
       ).flatten: _*)
     }
 
     override def read(json: JsValue): UpgradeBean = {
-      json.asJsObject.getFields("beanId", "newBean") match {
-        case Seq(beanIdJs, newBeanJs) =>
-          val beanId = beanIdJs.convertTo[String]
+     val jsObject = json.asJsObject
+      val packOpt = jsObject.fields.get(PACK).map(_.convertTo[String])
+        jsObject.getFields(NAME, NEW_BEAN) match {
+        case Seq(nameJs, newBeanJs) =>
+          val name = nameJs.convertTo[String]
           val newBean = newBeanJs.convertTo[RawBean]
-          UpgradeBean(beanId, newBean)
-        case other => deserializationError(s"Cannot deserialize DockerEntity: invalid input. Raw input: $other")
+          UpgradeBean(packOpt, name, newBean)
+        case other => deserializationError(s"Cannot deserialize UpgradeBean: invalid input. Raw input: $other")
       }
     }
   }

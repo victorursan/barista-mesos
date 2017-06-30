@@ -8,8 +8,8 @@ import com.victorursan.zookeeper.StateController
 import org.apache.mesos.v1.Protos.{OfferID, TaskID}
 import spray.json._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
@@ -80,11 +80,6 @@ class BaristaController extends JsonSupport with MesosConf {
     scaleBean.toJson
   }
 
-  def resetBean(bean: Bean): Bean =
-    bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
-      resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
-    ))
-
   def launchPack(pack: Pack): JsValue = {
     val newPack = pack.copy(mix = pack.mix.map(qb => qb.copy(bean = qb.bean.copy(pack = Some(pack.name))))) //set pack name for all rawBeans
     var toLaunch: Set[Bean] = Set()
@@ -126,18 +121,11 @@ class BaristaController extends JsonSupport with MesosConf {
     "We are closed"
   }
 
-  def killTask(tasksId: Set[String]): JsValue = {
-    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter { (bean: Bean) => tasksId.contains(bean.taskId) })
-    val tasks = StateController.addToKill(tasksId)
-    for (task <- tasks) {
-      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
-    }
-    tasks toJson
-  }
-
   def defragment(): JsValue = {
     val runningBeans = StateController.runningUnpacked.toList
-    Future{defragment(runningBeans)}
+    Future {
+      defragment(runningBeans)
+    }
     "Started the defragmentation process" toJson
   }
 
@@ -167,21 +155,37 @@ class BaristaController extends JsonSupport with MesosConf {
     StateController.setDefragmenting(false)
   }
 
-  def upgrade(upgrade: UpgradeBean): Bean = {
-    val taskId = StateController.getNextId
-    val newBean = upgrade.newBean.toBean(taskId)
-    StateController.addToAccept(newBean)
-    StateController.runningUnpacked.find(_.taskId == upgrade.beanId)
-      .foreach(oldBean =>
-    waitRunning(newBean) match {
-      case Success(newBBean) =>
-        drain(oldBean)
-        killTask(Set(oldBean.taskId))
-        Thread.sleep(1000)
-        return newBBean
-      case _ => None
-    })
-    newBean
+  def resetBean(bean: Bean): Bean =
+    bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
+      resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
+    ))
+
+  def upgrade(upgrade: UpgradeBean): Set[Bean] = {
+    StateController.runningUnpacked.filter(bean => bean.name == upgrade.name && bean.pack == upgrade.pack)
+      .flatMap(oldBean => {
+        val taskId = StateController.getNextId
+        val newBean = upgrade.newBean.toBean(taskId)
+        StateController.addToAccept(newBean)
+
+        waitRunning(newBean) match {
+
+          case Success(newBBean) =>
+            drain(oldBean)
+            killTask(Set(oldBean.taskId))
+            Thread.sleep(1000)
+            Some(newBBean)
+          case _ => None
+        }
+      })
+  }
+
+  def killTask(tasksId: Set[String]): JsValue = {
+    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter { (bean: Bean) => tasksId.contains(bean.taskId) })
+    val tasks = StateController.addToKill(tasksId)
+    for (task <- tasks) {
+      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
+    }
+    tasks toJson
   }
 
   private def drain(bean: Bean): Try[Bean] = {

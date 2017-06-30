@@ -1,3 +1,3 @@
 package com.victorursan.state
 
-case class UpgradeBean(beanId: String, newBean: RawBean)
+case class UpgradeBean(pack: Option[String] = None, name: String, newBean: RawBean)
