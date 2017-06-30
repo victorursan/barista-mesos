@@ -167,6 +167,23 @@ class BaristaController extends JsonSupport with MesosConf {
     StateController.setDefragmenting(false)
   }
 
+  def upgrade(upgrade: UpgradeBean): Bean = {
+    val taskId = StateController.getNextId
+    val newBean = upgrade.newBean.toBean(taskId)
+    StateController.addToAccept(newBean)
+    StateController.runningUnpacked.find(_.taskId == upgrade.beanId)
+      .foreach(oldBean =>
+    waitRunning(newBean) match {
+      case Success(newBBean) =>
+        drain(oldBean)
+        killTask(Set(oldBean.taskId))
+        Thread.sleep(1000)
+        return newBBean
+      case _ => None
+    })
+    newBean
+  }
+
   private def drain(bean: Bean): Try[Bean] = {
 
     Success(bean)

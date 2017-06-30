@@ -10,6 +10,30 @@ import scala.language.postfixOps
   * Created by victor on 5/4/17.
   */
 class JsonSupportTest extends Specification with JsonSupport {
+
+  private val upgradeBeanJsonStr =
+    """{
+        "beanId": "hello-world~68",
+        "newBean": {
+             "name": "hello-world-a",
+             "dockerEntity": {
+             "image": "victorursan/akka-http-hello",
+             "role": "*",
+             "resource": {
+               "cpu": 0.3,
+               "mem": 300.0,
+              "ports": [ "4321" ]
+           }
+           },
+             "checks": [
+           {
+             "httpPath": "/",
+             "interval": 5
+           }
+             ]
+           }
+         }"""
+
   private val randomJsonStr =
     """{"taskId":"hello-world~2","name":"hello-world","dockerEntity":{"image":"victorursan/akka-http-hello",
     "role":"*", "network":"bridge", "resource":{"cpu":0.2,"mem":128.0, "ports":["4321", "4322 -> 1233"]}, "arguments":[]},
@@ -48,6 +72,11 @@ class JsonSupportTest extends Specification with JsonSupport {
       offerJson.parseJson.convertTo[Offer] must_== offer
       offer.toJson must_== offerJson.parseJson
     }
+
+//    "upgradeBean" in {
+////        print(upgradeBeanJsonStr.parseJson.convertTo[UpgradeBean])
+////      1 must_== 1
+//    }
 
   }
 }

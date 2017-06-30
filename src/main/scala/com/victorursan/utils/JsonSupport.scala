@@ -14,6 +14,25 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val scaleBeanProtocol: RootJsonFormat[ScaleBean] = jsonFormat3(ScaleBean)
   implicit val agentResourcesProtocol: RootJsonFormat[AgentResources] = jsonFormat3(AgentResources)
 
+  implicit val upgradeBeanProtocol: RootJsonFormat[UpgradeBean] = new RootJsonFormat[UpgradeBean] {
+    override def write(upgradeBean: UpgradeBean): JsValue = {
+      JsObject(List(
+        Some("beanId" -> upgradeBean.beanId.toJson),
+        Some("newBean" -> upgradeBean.newBean.toJson)
+      ).flatten: _*)
+    }
+
+    override def read(json: JsValue): UpgradeBean = {
+      json.asJsObject.getFields("beanId", "newBean") match {
+        case Seq(beanIdJs, newBeanJs) =>
+          val beanId = beanIdJs.convertTo[String]
+          val newBean = newBeanJs.convertTo[RawBean]
+          UpgradeBean(beanId, newBean)
+        case other => deserializationError(s"Cannot deserialize DockerEntity: invalid input. Raw input: $other")
+      }
+    }
+  }
+
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = new RootJsonFormat[DockerResource] {
     private val CPU = "cpu"
     private val MEMORY = "mem"

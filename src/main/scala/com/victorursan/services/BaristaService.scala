@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.http.scaladsl.server.Route
 import com.victorursan.barista.BaristaController
-import com.victorursan.state.{Pack, RawBean, ScaleBean}
+import com.victorursan.state.{Pack, RawBean, ScaleBean, UpgradeBean}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,6 +37,7 @@ trait BaristaService extends BaseService {
         }
       }
     } ~ pathPrefix("api") {
+
       pathPrefix("task") {
         pathPrefix("bean") {
           path("add") {
@@ -49,6 +50,15 @@ trait BaristaService extends BaseService {
             entity(as[ScaleBean]) { scaleBean: ScaleBean =>
               complete(baristaController.scaleBean(scaleBean))
             }
+          } ~ path("upgrade") {
+//            post {
+              log.info("[POST] /api/task/bean/upgrade upgrade a ")
+              entity(as[UpgradeBean]) { upgradeBean =>
+                print(upgradeBean)
+                                complete(baristaController.upgrade(upgradeBean))
+//                complete("a")
+              }
+//            }
           }
         } ~ path("pack" / "add") {
           log.info("[POST] /api/task/pack/add launching a new pack")
@@ -81,6 +91,8 @@ trait BaristaService extends BaseService {
             complete(baristaController.defragment())
           }
         }
+
+
       } ~ path("overview") {
         get {
           log.info("[GET] /api/overview an overview")

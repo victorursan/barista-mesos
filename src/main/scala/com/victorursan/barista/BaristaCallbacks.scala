@@ -2,7 +2,6 @@ package com.victorursan.barista
 
 import com.victorursan.consul.{ServiceController, Utils}
 import com.victorursan.docker.DockerController
-import com.victorursan.docker.Main.beanDocker
 import com.victorursan.mesos.MesosSchedulerCallbacks
 import com.victorursan.state.BeanDocker
 import com.victorursan.utils.JsonSupport
