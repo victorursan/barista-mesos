@@ -73,7 +73,7 @@ class BaristaController extends JsonSupport with MesosConf {
       similarBeans.headOption.foreach(bean =>
         StateController.addToAccept(
           (1 to -scaleQuantity)
-            .map(_ => resetBean(bean))
+            .map(_ => BeanUtils.resetBean(bean))
             .toSet)
       )
     }
@@ -89,6 +89,7 @@ class BaristaController extends JsonSupport with MesosConf {
       val taskIds = beans.map(_.taskId).toSet
       qb.copy(taskIds = Some(taskIds))
     })
+    StateController.saveAutoScaling(pack.name, pack.autoScaling)
     StateController.addToAccept(toLaunch)
     newPack.copy(mix = newMix) toJson
   }
@@ -141,7 +142,7 @@ class BaristaController extends JsonSupport with MesosConf {
     while (toScheduleBeans.nonEmpty) {
       val bean = toScheduleBeans.head
       toScheduleBeans = toScheduleBeans.filterNot(_.taskId == bean.taskId)
-      val resetedBean = resetBean(bean)
+      val resetedBean = BeanUtils.resetBean(bean)
       StateController.addToAccept(resetedBean)
       waitRunning(resetedBean) match {
         case Success(newBean) =>
@@ -154,11 +155,6 @@ class BaristaController extends JsonSupport with MesosConf {
     }
     StateController.setDefragmenting(false)
   }
-
-  def resetBean(bean: Bean): Bean =
-    bean.copy(id = StateController.getNextId, agentId = None, dockerEntity = bean.dockerEntity.copy(
-      resource = bean.dockerEntity.resource.copy(ports = bean.dockerEntity.resource.ports.map(dockerPort => dockerPort.copy(hostPort = None)))
-    ))
 
   def upgrade(upgrade: UpgradeBean): Set[Bean] = {
     StateController.runningUnpacked.filter(bean => bean.name == upgrade.name && bean.pack == upgrade.pack)

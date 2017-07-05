@@ -12,6 +12,8 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val beanCheckProtocol: RootJsonFormat[BeanCheck] = jsonFormat2(BeanCheck)
   implicit val beanDockerProtocol: RootJsonFormat[BeanDocker] = jsonFormat3(BeanDocker)
   implicit val scaleBeanProtocol: RootJsonFormat[ScaleBean] = jsonFormat3(ScaleBean)
+  implicit val thresholdsProtocol: RootJsonFormat[Thresholds] = jsonFormat4(Thresholds)
+  implicit val autoScalingProtocol: RootJsonFormat[AutoScaling] = jsonFormat3(AutoScaling)
   implicit val agentResourcesProtocol: RootJsonFormat[AgentResources] = jsonFormat3(AgentResources)
 
   implicit val upgradeBeanProtocol: RootJsonFormat[UpgradeBean] = new RootJsonFormat[UpgradeBean] {
@@ -126,7 +128,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
   implicit val rawBeanProtocol: RootJsonFormat[RawBean] = jsonFormat4(RawBean)
   implicit val quantityBeanProtocol: RootJsonFormat[QuantityBean] = jsonFormat3(QuantityBean)
-  implicit val packProtocol: RootJsonFormat[Pack] = jsonFormat2(Pack)
+  implicit val packProtocol: RootJsonFormat[Pack] = jsonFormat3(Pack)
 
   implicit val beanProtocol: RootJsonFormat[Bean] = new RootJsonFormat[Bean] {
     private val HOSTNAME = "hostname"

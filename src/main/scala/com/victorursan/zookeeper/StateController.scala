@@ -28,6 +28,7 @@ object StateController extends JsonSupport with State {
   private val schedulerPath = s"$basePath/scheduler"
   private val roundRobinPath = s"$schedulerPath/roundRobin"
   private val defragmentingPath = s"$schedulerPath/defragmenting"
+  private val autoscalingPath = s"$basePath/autoscaling"
 
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
@@ -228,6 +229,16 @@ object StateController extends JsonSupport with State {
       .convertTo[Boolean])
       .getOrElse(false)
 
+  def getAutoScaling(pack: String): AutoScaling =
+    Try(new String(CuratorService.read(s"$autoscalingPath/$pack"))
+      .parseJson
+      .convertTo[AutoScaling])
+      .getOrElse(AutoScaling(algorithm = "static-threashold", resource = "mem", thresholds = Thresholds(List(20, 60), List(10, 10), List(30, 30), List(1, 9))))
+
+  def saveAutoScaling(pack: String, autoScaling: AutoScaling): AutoScaling = {
+    CuratorService.createOrUpdate(s"$autoscalingPath/$pack", autoScaling.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    autoScaling
+  }
 
   def clean(): Unit = CuratorService.delete(basePath)
 

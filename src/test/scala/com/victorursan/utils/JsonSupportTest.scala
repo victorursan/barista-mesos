@@ -11,6 +11,43 @@ import scala.language.postfixOps
   */
 class JsonSupportTest extends Specification with JsonSupport {
 
+
+  private val autoScalingJsStr =
+    """ {  "algorithm": "static-threashold",
+           "resource": "mem",
+           "thresholds": {
+              "load": [20, 60],
+              "time": [10, 10],
+              "cooldown": [30, 30],
+              "boundaries": [1, 9]
+              }
+        }"""
+  private val autoScaling = AutoScaling(algorithm = "static-threashold", resource = "mem", thresholds = Thresholds(List(20, 60), List(10, 10), List(30, 30), List(1, 9)))
+
+  private val thresholdsJsStr =
+    """{  "load" : [20, 60],
+                                  		  "time" : [10, 10],
+                                  		  "cooldown" : [30, 30],
+                                  		  "boundaries" : [1, 9]
+                                  	}"""
+  private val threshold = Thresholds(List(20, 60), List(10, 10), List(30, 30), List(1, 9))
+  private val packJsStr =
+    """{
+                            	"name": "pack3",
+                            	"mix": [],
+                              "autoScaling": {
+                            	  "algorithm": "static-threashold",
+                            	  "resource": "mem",
+                            	  "thresholds": {
+                            		  "load": [20, 60],
+                            		  "time": [10, 10],
+                            		  "cooldown": [30, 30],
+                            		  "boundaries": [1, 9]
+                            	}
+                            }
+                            }"""
+  private val pack = Pack(name = "pack3", mix = Set(), autoScaling = AutoScaling(algorithm = "static-threashold", resource = "mem", thresholds = Thresholds(List(20, 60), List(10, 10), List(30, 30), List(1, 9))))
+
   private val upgradeBeanJsonStr =
     """{
         "beanId": "hello-world~68",
@@ -72,11 +109,18 @@ class JsonSupportTest extends Specification with JsonSupport {
       offerJson.parseJson.convertTo[Offer] must_== offer
       offer.toJson must_== offerJson.parseJson
     }
+    "packProtocol" in {
+      packJsStr.parseJson.convertTo[Pack] must_== pack
+      pack.toJson must_== packJsStr.parseJson
+    }
+    "threshold" in {
+      thresholdsJsStr.parseJson.convertTo[Thresholds] must_== threshold
+      threshold.toJson must_== thresholdsJsStr.parseJson
 
-//    "upgradeBean" in {
-////        print(upgradeBeanJsonStr.parseJson.convertTo[UpgradeBean])
-////      1 must_== 1
-//    }
-
+    }
+    "autoScaling" in {
+      autoScalingJsStr.parseJson.convertTo[AutoScaling] must_== autoScaling
+      autoScaling.toJson must_== autoScalingJsStr.parseJson
+    }
   }
 }
