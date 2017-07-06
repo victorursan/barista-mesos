@@ -88,6 +88,12 @@ object StateController extends JsonSupport with State {
 
   override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
 
+  def removeRunningUnpacked(taskId: String): Set[Bean] = {
+    val newRunning = runningUnpacked.filterNot(t => t.taskId.equalsIgnoreCase(taskId))
+    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
+
   override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
     val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
     CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)

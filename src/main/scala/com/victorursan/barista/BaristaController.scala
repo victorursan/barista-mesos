@@ -2,6 +2,7 @@ package com.victorursan.barista
 
 import akka.actor.ActorSystem
 import com.victorursan.barista.scheduler.HostCompressionScheduler
+import com.victorursan.consul.ServiceController
 import com.victorursan.state._
 import com.victorursan.utils.{JsonSupport, MesosConf}
 import com.victorursan.zookeeper.StateController
@@ -17,7 +18,6 @@ import scala.util.{Failure, Success, Try}
   * Created by victor on 4/2/17.
   */
 class BaristaController extends JsonSupport with MesosConf {
-
   private implicit val system: ActorSystem = ActorSystem("Barista-controller-actor-system")
   private implicit val ec: ExecutionContext = system.dispatcher
 
@@ -67,7 +67,7 @@ class BaristaController extends JsonSupport with MesosConf {
     //todo what happens if there is no similar beans? ( as in count 0 )
     val scaleQuantity = similarBeans.size - scaleBean.amount
     if (scaleQuantity > 0) { //kill some
-      val tasks = StateController.addToKill(similarBeans.take(scaleQuantity).map(_.taskId))
+      val tasks = similarBeans.take(scaleQuantity).map(_.taskId)
       killTask(tasks)
     } else if (scaleQuantity < 0) { //add some
       similarBeans.headOption.foreach(bean =>
@@ -122,6 +122,31 @@ class BaristaController extends JsonSupport with MesosConf {
     "We are closed"
   }
 
+  def killTask(tasksIds: Set[String]): JsValue = {
+    val toKill = StateController.runningUnpacked.filter { (bean: Bean) => tasksIds.contains(bean.taskId) }
+    StateController.removeRunningUnpacked(toKill)
+    toKill.foreach(bean =>
+      drain(bean) match {
+        case Success(bbean) =>
+          ServiceController.deregisterService(bbean.hostname.get, bbean.taskId)
+          StateController.removeFromBeanDocker(bbean.taskId)
+        case _ => Unit
+      }
+    )
+    // todo
+
+    val tasks = StateController.addToKill(tasksIds)
+    for (task <- tasks) {
+      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
+    }
+    tasks toJson
+  }
+
+  private def drain(bean: Bean): Try[Bean] = {
+
+    Success(bean)
+  }
+
   def defragment(): JsValue = {
     val runningBeans = StateController.runningUnpacked.toList
     Future {
@@ -147,46 +172,12 @@ class BaristaController extends JsonSupport with MesosConf {
       waitRunning(resetedBean) match {
         case Success(newBean) =>
           toScheduleBeans = toScheduleBeans.filterNot(bbean => bbean.agentId == newBean.agentId)
-          drain(bean)
           killTask(Set(bean.taskId))
           Thread.sleep(1000)
         case _ => None
       }
     }
     StateController.setDefragmenting(false)
-  }
-
-  def upgrade(upgrade: UpgradeBean): Set[Bean] = {
-    StateController.runningUnpacked.filter(bean => bean.name == upgrade.name && bean.pack == upgrade.pack)
-      .flatMap(oldBean => {
-        val taskId = StateController.getNextId
-        val newBean = upgrade.newBean.toBean(taskId)
-        StateController.addToAccept(newBean)
-
-        waitRunning(newBean) match {
-
-          case Success(newBBean) =>
-            drain(oldBean)
-            killTask(Set(oldBean.taskId))
-            Thread.sleep(1000)
-            Some(newBBean)
-          case _ => None
-        }
-      })
-  }
-
-  def killTask(tasksId: Set[String]): JsValue = {
-    StateController.removeRunningUnpacked(StateController.runningUnpacked.filter { (bean: Bean) => tasksId.contains(bean.taskId) })
-    val tasks = StateController.addToKill(tasksId)
-    for (task <- tasks) {
-      BaristaCalls.kill(TaskID.newBuilder().setValue(task).build())
-    }
-    tasks toJson
-  }
-
-  private def drain(bean: Bean): Try[Bean] = {
-
-    Success(bean)
   }
 
   private def waitRunning(bean: Bean): Try[Bean] = {
@@ -201,4 +192,26 @@ class BaristaController extends JsonSupport with MesosConf {
     Failure(new Throwable("a"))
   }
 
+  def upgrade(upgrade: UpgradeBean): Set[Bean] = {
+    StateController.runningUnpacked.filter(bean => bean.name == upgrade.name && bean.pack == upgrade.pack)
+      .flatMap(oldBean => {
+        val taskId = StateController.getNextId
+        val newBean = upgrade.newBean.toBean(taskId)
+        StateController.addToAccept(newBean)
+
+        waitRunning(newBean) match {
+
+          case Success(newBBean) =>
+            killTask(Set(oldBean.taskId))
+            Thread.sleep(1000)
+            Some(newBBean)
+          case _ => None
+        }
+      })
+  }
+
+}
+
+object BaristaController {
+  val loadBalancing = "leastconn"
 }

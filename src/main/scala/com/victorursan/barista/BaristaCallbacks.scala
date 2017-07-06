@@ -79,7 +79,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
   }
 
   def checkMonitoredValue(taskName: String, value: Double, time: Long, thresholds: Thresholds): Unit = {
-    println(s"$taskName value: $value -\t $thresholds")
+    println(s"$taskName \t value:\t $value")
     val overTime = timeOver(taskName)
     if (thresholds.load.tail.head <= value) {
       if (overTime != 0) {
@@ -103,11 +103,11 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
 
   def scaleUp(taskName: String, boundaries: List[Int]): Unit =
     Future {
-      val runningTasks = StateController.runningUnpacked.filter(_.taskId.replaceAll("~.*$", "").equalsIgnoreCase(taskName))
-      val awaitingTasks = StateController.awaitingBeans.filter(_.taskId.replaceAll("~.*$", "").equalsIgnoreCase(taskName))
+      val runningTasks = StateController.runningUnpacked.filter(_.taskId.replaceAll("~(\\d)*$", "").equalsIgnoreCase(taskName))
+      val awaitingTasks = StateController.awaitingBeans.filter(_.taskId.replaceAll("~(\\d)*$", "").equalsIgnoreCase(taskName))
       println(taskName)
       if ((runningTasks.size + awaitingTasks.size) < boundaries.tail.head) {
-        runningTasks.map(
+        runningTasks.headOption.map(
           bean => BeanUtils.resetBean(bean)
         ).foreach(StateController.addToAccept)
       }
@@ -145,7 +145,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
     if (update.hasTaskId && update.hasState) {
       val taskId = update.getTaskId.getValue
       update.getState match {
-        case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE =>
+        case TaskState.TASK_LOST | TaskState.TASK_FAILED | TaskState.TASK_UNREACHABLE | TaskState.TASK_FINISHED =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
             StateController.addToAccept(scheduledBean) // todo
@@ -153,14 +153,12 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
             StateController.removeFromBeanDocker(taskId)
           })
         case TaskState.TASK_KILLED =>
-          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
-            ServiceController.deregisterService(scheduledBean.hostname.get, taskId) // todo
-            StateController.removeRunningUnpacked(scheduledBean)
+//          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
             StateController.tasksToKill.find(t => t.equals(taskId)).foreach(StateController.removeFromKill)
-            StateController.removeFromBeanDocker(taskId)
-          })
+//          })
         case TaskState.TASK_RUNNING =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+          ServiceController.setLoadBalancer("", BaristaController.loadBalancing)
 
             val baristaService = Utils.convertBeanToService(scheduledBean, scheduledBean.dockerEntity.resource.
               ports.headOption.map(_.hostPort.get).getOrElse(8500)) //todo

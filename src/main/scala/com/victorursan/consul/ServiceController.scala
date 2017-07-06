@@ -32,6 +32,15 @@ object ServiceController {
     check
   }
 
+
+  def setLoadBalancer(consulClientStr: String, loadBalancing: String): Unit = {
+    val consulClient = new ConsulClient(consulClientStr)
+//    consulClient.setKVValue("/balancer", loadBalancing);
+  }
+  private def setLoadBalancer(consulClient: ConsulClient, loadBalancing: String): Unit = {
+//    consulClient.setKVValue("/balancer", loadBalancing);
+  }
+
   def deregisterService(consulClient: ConsulClient, serviceId: String): Unit =
     consulClient.agentServiceDeregister(serviceId)
 
