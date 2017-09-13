@@ -1,8 +1,10 @@
 package com.victorursan.docker
 
+import java.util.Date
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, Uri}
+import akka.http.scaladsl.model.{HttpEntity, HttpMethods, HttpRequest, Uri}
 import akka.stream.ActorMaterializer
 import com.victorursan.state.BeanDocker
 import com.victorursan.utils.JsonSupport
@@ -24,11 +26,11 @@ object DockerController extends JsonSupport {
   def registerBeanDocker(beanDocker: BeanDocker): Observable[DockerStatus] = {
     val beanBuss = Subject[DockerStatus]()
     val threadSafeBeanBuss: SerializedSubject[DockerStatus] = SerializedSubject[DockerStatus](beanBuss)
-
+    HttpEntity
     val request: HttpRequest = HttpRequest(HttpMethods.GET, uri = Uri.from(scheme = "http", host = beanDocker.hostname, port = 2375, path = s"/containers/${beanDocker.dockerId}/stats"))
     Http().singleRequest(request)
       .flatMap(response => {
-        response.entity.dataBytes.runForeach { chunk =>
+        response.entity.withoutSizeLimit().dataBytes.runForeach { chunk =>
           val stat = getContainerStatus(beanDocker.taskId, chunk.utf8String)
           threadSafeBeanBuss.onNext(stat)
         }
@@ -39,6 +41,10 @@ object DockerController extends JsonSupport {
 
   def getContainerStatus(taskId: String, chunk: String): DockerStatus = {
     val chunkJs = chunk.parseJson.convertTo[Map[String, JsValue]]
+
+    val dateJs = chunkJs("read").convertTo[String]
+    val date = new Date()
+
     val cPUStats = chunkJs("cpu_stats").convertTo[Map[String, JsValue]]
     val cPUStatsCPUUsage = cPUStats("cpu_usage").convertTo[Map[String, JsValue]]
     val preCPUStats = chunkJs("precpu_stats").convertTo[Map[String, JsValue]]
@@ -58,7 +64,7 @@ object DockerController extends JsonSupport {
     // CPUStats.SystemUsage - PreCPUStats.SystemUsage
     val cpuPercent = (cpuDelta / systemDelta) * nrCpu * 100
 
-    DockerStatus(taskId = taskId, cpuPer = cpuPercent, memUsed / maxMem * 100, memUsed, maxMem)
+    DockerStatus(taskId = taskId, dateTime = date.getTime, cpuPer = cpuPercent, memUsed / maxMem * 100, memUsed, maxMem)
   }
 
 }

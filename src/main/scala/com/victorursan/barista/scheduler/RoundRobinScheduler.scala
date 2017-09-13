@@ -1,4 +1,4 @@
-package com.victorursan.barista
+package com.victorursan.barista.scheduler
 
 import java.lang.Math.min
 
@@ -41,7 +41,7 @@ object RoundRobinScheduler extends Scheduler{
       nextOfferIndex = StateController.incRoundRobinIndex
     }
 
-    ScheduleState(acceptOffers, remainingOffers.values.flatten.filterNot(off => acceptOffers.map(_._2).contains(off.id)), scheduledBeans)
+    ScheduleState(acceptOffers, offers.filterNot(off => acceptOffers.map(_._2).contains(off.id)), scheduledBeans)
   }
 
 

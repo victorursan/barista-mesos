@@ -1,15 +1,12 @@
-package com.victorursan.barista
+package com.victorursan.barista.scheduler
 
 import com.victorursan.state.{AgentResources, Bean, Offer, ScheduleState}
 import com.victorursan.zookeeper.StateController
 
 object HostCompressionScheduler extends Scheduler {
   override def schedule(beans: Set[Bean], offers: List[Offer]): ScheduleState = {
-    StateController.agentResources
-
     var acceptOffers = Set[(Bean, String)]()
     var scheduledBeans = Set[String]()
-
 
     val agents: List[String] = StateController.agentResources.toList.sortBy { case (agent: String, resources: AgentResources) =>
       if (schedulerResource == "mem") resources.mem else resources.cpus
@@ -31,26 +28,7 @@ object HostCompressionScheduler extends Scheduler {
         })
       })
     )
-
-
-
     ScheduleState(acceptOffers, remainingOffers, scheduledBeans)
   }
 
-  //  private def beanWithHostPort(bean: Bean, mesosOffer: Offer): Option[Bean] = {
-  //    val hostPorts = mesosOffer.ports.toStream.flatten
-  //    val oldBeanPorts = bean.dockerEntity.resource.ports.groupBy(_.hostPort.isDefined)
-  //    val portsToBeAssign = oldBeanPorts.getOrElse(false, List())
-  //    val assignedPorts = hostPorts.take(portsToBeAssign.length).toList
-  //      .zip(portsToBeAssign)
-  //      .map { case (hostPort: Int, dockerPort: DockerPort) => dockerPort.copy(hostPort = Some(hostPort)) }
-  //    if (assignedPorts.length == portsToBeAssign.length) {
-  //      Some(bean.copy(dockerEntity =
-  //        bean.dockerEntity.copy(resource =
-  //          bean.dockerEntity.resource.copy(ports =
-  //            assignedPorts ++ oldBeanPorts.getOrElse(true, List())))))
-  //    } else {
-  //      None
-  //    }
-  //  }
 }

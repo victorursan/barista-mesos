@@ -1,4 +1,4 @@
-package com.victorursan.barista
+package com.victorursan.barista.scheduler
 
 import com.victorursan.state.{Bean, DockerPort, Offer, ScheduleState}
 import com.victorursan.utils.MesosConf

@@ -27,6 +27,8 @@ object StateController extends JsonSupport with State {
   private val agentResourcesPath = s"$basePath/agentResources"
   private val schedulerPath = s"$basePath/scheduler"
   private val roundRobinPath = s"$schedulerPath/roundRobin"
+  private val defragmentingPath = s"$schedulerPath/defragmenting"
+  private val autoscalingPath = s"$basePath/autoscaling"
 
 
   override def addToOverview(taskId: String, state: String): Map[String, String] = {
@@ -85,6 +87,12 @@ object StateController extends JsonSupport with State {
       .getOrElse(Set())
 
   override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
+
+  def removeRunningUnpacked(taskId: String): Set[Bean] = {
+    val newRunning = runningUnpacked.filterNot(t => t.taskId.equalsIgnoreCase(taskId))
+    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
 
   override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
     val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
@@ -214,6 +222,28 @@ object StateController extends JsonSupport with State {
     val incrementedValue = roundRobinIndex + 1
     CuratorService.createOrUpdate(roundRobinPath, incrementedValue.toJson.toString().getBytes(StandardCharsets.UTF_8))
     incrementedValue
+  }
+
+  def setDefragmenting(defragmenting: Boolean): Boolean = {
+    CuratorService.createOrUpdate(defragmentingPath, defragmenting.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    defragmenting
+  }
+
+  def isDefragmenting: Boolean =
+    Try(new String(CuratorService.read(defragmentingPath))
+      .parseJson
+      .convertTo[Boolean])
+      .getOrElse(false)
+
+  def getAutoScaling(pack: String): AutoScaling =
+    Try(new String(CuratorService.read(s"$autoscalingPath/$pack"))
+      .parseJson
+      .convertTo[AutoScaling])
+      .getOrElse(AutoScaling(algorithm = "static-threashold", resource = "mem", thresholds = Thresholds(List(20, 60), List(10, 10), List(30, 30), List(1, 9))))
+
+  def saveAutoScaling(pack: String, autoScaling: AutoScaling): AutoScaling = {
+    CuratorService.createOrUpdate(s"$autoscalingPath/$pack", autoScaling.toJson.toString().getBytes(StandardCharsets.UTF_8))
+    autoScaling
   }
 
   def clean(): Unit = CuratorService.delete(basePath)

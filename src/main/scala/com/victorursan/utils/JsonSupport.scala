@@ -12,7 +12,35 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val beanCheckProtocol: RootJsonFormat[BeanCheck] = jsonFormat2(BeanCheck)
   implicit val beanDockerProtocol: RootJsonFormat[BeanDocker] = jsonFormat3(BeanDocker)
   implicit val scaleBeanProtocol: RootJsonFormat[ScaleBean] = jsonFormat3(ScaleBean)
+  implicit val thresholdsProtocol: RootJsonFormat[Thresholds] = jsonFormat4(Thresholds)
+  implicit val autoScalingProtocol: RootJsonFormat[AutoScaling] = jsonFormat3(AutoScaling)
   implicit val agentResourcesProtocol: RootJsonFormat[AgentResources] = jsonFormat3(AgentResources)
+
+  implicit val upgradeBeanProtocol: RootJsonFormat[UpgradeBean] = new RootJsonFormat[UpgradeBean] {
+    private val PACK = "pack"
+    private val NAME = "name"
+    private val NEW_BEAN = "newBean"
+
+    override def write(upgradeBean: UpgradeBean): JsValue = {
+      JsObject(List(
+        upgradeBean.pack.map(pack => PACK -> pack.toJson),
+        Some(NAME -> upgradeBean.name.toJson),
+        Some(NEW_BEAN -> upgradeBean.newBean.toJson)
+      ).flatten: _*)
+    }
+
+    override def read(json: JsValue): UpgradeBean = {
+     val jsObject = json.asJsObject
+      val packOpt = jsObject.fields.get(PACK).map(_.convertTo[String])
+        jsObject.getFields(NAME, NEW_BEAN) match {
+        case Seq(nameJs, newBeanJs) =>
+          val name = nameJs.convertTo[String]
+          val newBean = newBeanJs.convertTo[RawBean]
+          UpgradeBean(packOpt, name, newBean)
+        case other => deserializationError(s"Cannot deserialize UpgradeBean: invalid input. Raw input: $other")
+      }
+    }
+  }
 
   implicit val resourceProtocol: RootJsonFormat[DockerResource] = new RootJsonFormat[DockerResource] {
     private val CPU = "cpu"
@@ -100,7 +128,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
   implicit val rawBeanProtocol: RootJsonFormat[RawBean] = jsonFormat4(RawBean)
   implicit val quantityBeanProtocol: RootJsonFormat[QuantityBean] = jsonFormat3(QuantityBean)
-  implicit val packProtocol: RootJsonFormat[Pack] = jsonFormat2(Pack)
+  implicit val packProtocol: RootJsonFormat[Pack] = jsonFormat3(Pack)
 
   implicit val beanProtocol: RootJsonFormat[Bean] = new RootJsonFormat[Bean] {
     private val HOSTNAME = "hostname"
