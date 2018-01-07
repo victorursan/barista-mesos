@@ -15,7 +15,7 @@ resolvers ++= Seq(
   "ossrh" at "https://oss.sonatype.org/content/repositories/snapshots/",
   Resolver.bintrayRepo("hseeberger", "maven")
 )
-resourceDirectory in Compile := baseDirectory.value / "src" / "main" / "re% Sources"
+resourceDirectory in Compile := baseDirectory.value / "src" / "main" / "rewithSources() withJavadoc()"
 compileOrder in Compile := CompileOrder.JavaThenScala
 
 libraryDependencies ++= {
@@ -32,22 +32,22 @@ libraryDependencies ++= {
   val ConsulApi = "1.3.0"
 
   Seq(
-    "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Sources,
-    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion % Sources,
-    "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion % Sources,
-    "ch.qos.logback" % "logback-classic" % LogbackVersion % Sources, //in depth logs from mesos
-    "io.reactivex" %% "rxscala" % RxScala % Sources,
-    "io.spray" %% "spray-json" % Spray % Sources,
-    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-client" % RxJavaMesos % Sources,
-    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos % Sources,
-    "org.apache.mesos" % "mesos" % Mesos % Sources,
+    "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion withSources() withJavadoc(),
+    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion withSources() withJavadoc(),
+    "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion withSources() withJavadoc(),
+    "ch.qos.logback" % "logback-classic" % LogbackVersion withSources() withJavadoc(), //in depth logs from mesos
+    "io.reactivex" %% "rxscala" % RxScala withSources() withJavadoc(),
+    "io.spray" %% "spray-json" % Spray withSources() withJavadoc(),
+    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-client" % RxJavaMesos withSources() withJavadoc(),
+    "com.mesosphere.mesos.rx.java" % "mesos-rxjava-protobuf-client" % RxJavaMesos withSources() withJavadoc(),
+    "org.apache.mesos" % "mesos" % Mesos withSources() withJavadoc(),
 
     //curator
-    "org.apache.curator" % "curator-framework" % Curator % Sources,
-    "org.apache.curator" % "curator-recipes" % Curator % Sources,
+    "org.apache.curator" % "curator-framework" % Curator withSources(),
+    "org.apache.curator" % "curator-recipes" % Curator withSources(),
 
     //consul
-    "com.ecwid.consul" % "consul-api" % ConsulApi % Sources,
+    "com.ecwid.consul" % "consul-api" % ConsulApi withSources() withJavadoc(),
 
     //tests
     "org.specs2" %% "specs2-core" % Specs2 % Test
