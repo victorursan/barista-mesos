@@ -46,7 +46,7 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
             task._2.take(400 millis).reduce {(acc: DockerStatus, status: DockerStatus) =>
                 DockerStatus(acc.taskId, dateTime = acc.dateTime, (acc.cpuPer + status.cpuPer) / 2, (acc.memPer + status.memPer) / 2, acc.memUsage + status.memUsage, acc.memAvailable + status.memAvailable)
             }.first.foreach((tasksss: DockerStatus) => {
-              if (queue.size > 20) {
+              if (queue.lengthCompare(20) > 0) {
                 while (queue.size > 20) queue.dequeue()
                 queue.enqueue(task._1 -> tasksss)
               } else {

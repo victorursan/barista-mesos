@@ -109,15 +109,18 @@ class JsonSupportTest extends Specification with JsonSupport {
       offerJson.parseJson.convertTo[Offer] must_== offer
       offer.toJson must_== offerJson.parseJson
     }
+
     "packProtocol" in {
       packJsStr.parseJson.convertTo[Pack] must_== pack
       pack.toJson must_== packJsStr.parseJson
     }
+
     "threshold" in {
       thresholdsJsStr.parseJson.convertTo[Thresholds] must_== threshold
       threshold.toJson must_== thresholdsJsStr.parseJson
 
     }
+
     "autoScaling" in {
       autoScalingJsStr.parseJson.convertTo[AutoScaling] must_== autoScaling
       autoScaling.toJson must_== autoScalingJsStr.parseJson
