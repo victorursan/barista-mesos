@@ -15,7 +15,7 @@ resolvers ++= Seq(
   "ossrh" at "https://oss.sonatype.org/content/repositories/snapshots/",
   Resolver.bintrayRepo("hseeberger", "maven")
 )
-resourceDirectory in Compile := baseDirectory.value / "src" / "main" / "resources"
+resourceDirectory in Compile := baseDirectory.value / "src" / "main" / "re% Sources"
 compileOrder in Compile := CompileOrder.JavaThenScala
 
 libraryDependencies ++= {
