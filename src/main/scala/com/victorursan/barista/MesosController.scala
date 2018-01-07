@@ -35,7 +35,7 @@ object MesosController extends MesosConf with JsonSupport {
   }
 
   private def agentResources(): Map[String, AgentResources] = {
-    val eventualMap: Future[Map[String, AgentResources]] =  Await.result(
+    val eventualMap: Future[Map[String, AgentResources]] = Await.result(
       Http()
         .singleRequest(HttpRequest(HttpMethods.PUT, Uri.from(scheme = mesosUri.getScheme, host = mesosUri.getHost,
           port = mesosUri.getPort, path = "/master/slaves"), entity = HttpEntity.Empty), settings = settings), 10 seconds)

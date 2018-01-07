@@ -12,7 +12,7 @@ case class Bean(id: String, name: String, dockerEntity: DockerEntity, pack: Opti
 }
 
 case class RawBean(name: String, dockerEntity: DockerEntity, pack: Option[String] = None, checks: Option[List[BeanCheck]] = None) {
-  def toBean(id: String): Bean = Bean(id, name, dockerEntity, pack, checks= checks.getOrElse(List()))
+  def toBean(id: String): Bean = Bean(id, name, dockerEntity, pack, checks = checks.getOrElse(List()))
 }
 
 case class BeanCheck(httpPath: String, interval: Int)

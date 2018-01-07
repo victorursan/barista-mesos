@@ -3,7 +3,7 @@ package com.victorursan.barista.scheduler
 import com.victorursan.state.{Bean, DockerPort, Offer, ScheduleState}
 import com.victorursan.utils.MesosConf
 
-trait Scheduler extends MesosConf  {
+trait Scheduler extends MesosConf {
   def schedule(beans: Set[Bean], offers: List[Offer]): ScheduleState
 
   protected def resolveBeanWithHost(bean: Bean, mesosOffer: Offer): Option[Bean] = {
@@ -23,7 +23,7 @@ trait Scheduler extends MesosConf  {
     val assignedPorts = hostPorts.take(portsToBeAssign.length).toList
       .zip(portsToBeAssign)
       .map { case (hostPort: Int, dockerPort: DockerPort) => dockerPort.copy(hostPort = Some(hostPort)) }
-    if (assignedPorts.length == portsToBeAssign.length) {
+    if (assignedPorts.lengthCompare(portsToBeAssign.size) == 0) {
       Some(bean.copy(dockerEntity =
         bean.dockerEntity.copy(resource =
           bean.dockerEntity.resource.copy(ports =

@@ -13,10 +13,10 @@ import org.slf4j.LoggerFactory
 import rx.lang.scala.subjects.PublishSubject
 import rx.lang.scala.{Observable, Subject}
 
-import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
@@ -43,17 +43,17 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
         .foreach(task => {
           val queue: mutable.Queue[(Long, DockerStatus)] = statService(taskName)
           if (!queue.exists(_._1 == task._1)) {
-            task._2.take(400 millis).reduce {(acc: DockerStatus, status: DockerStatus) =>
-                DockerStatus(acc.taskId, dateTime = acc.dateTime, (acc.cpuPer + status.cpuPer) / 2, (acc.memPer + status.memPer) / 2, acc.memUsage + status.memUsage, acc.memAvailable + status.memAvailable)
+            task._2.take(400 millis).reduce { (acc: DockerStatus, status: DockerStatus) =>
+              DockerStatus(acc.taskId, dateTime = acc.dateTime, (acc.cpuPer + status.cpuPer) / 2, (acc.memPer + status.memPer) / 2, acc.memUsage + status.memUsage, acc.memAvailable + status.memAvailable)
             }.first.foreach((tasksss: DockerStatus) => {
               if (queue.lengthCompare(20) > 0) {
-                while (queue.size > 20) queue.dequeue()
+                while (queue.lengthCompare(20) > 0) queue.dequeue()
                 queue.enqueue(task._1 -> tasksss)
               } else {
                 queue.enqueue(task._1 -> tasksss)
               }
               statService.put(taskName, queue)
-              if (queue.size > 19) {
+              if (queue.lengthCompare(19) > 0) {
                 checkStateMonitor(taskName)
               }
             })
@@ -153,12 +153,12 @@ object BaristaCallbacks extends MesosSchedulerCallbacks with JsonSupport {
             StateController.removeFromBeanDocker(taskId)
           })
         case TaskState.TASK_KILLED =>
-//          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
-            StateController.tasksToKill.find(t => t.equals(taskId)).foreach(StateController.removeFromKill)
-//          })
+          //          StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
+          StateController.tasksToKill.find(t => t.equals(taskId)).foreach(StateController.removeFromKill)
+        //          })
         case TaskState.TASK_RUNNING =>
           StateController.runningUnpacked.find(s => s.taskId.equals(taskId)).foreach(scheduledBean => {
-          ServiceController.setLoadBalancer("", BaristaController.loadBalancing)
+            ServiceController.setLoadBalancer("", BaristaController.loadBalancing)
 
             val baristaService = Utils.convertBeanToService(scheduledBean, scheduledBean.dockerEntity.resource.
               ports.headOption.map(_.hostPort.get).getOrElse(8500)) //todo

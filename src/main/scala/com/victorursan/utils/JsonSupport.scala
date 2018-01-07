@@ -30,9 +30,9 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
     }
 
     override def read(json: JsValue): UpgradeBean = {
-     val jsObject = json.asJsObject
+      val jsObject = json.asJsObject
       val packOpt = jsObject.fields.get(PACK).map(_.convertTo[String])
-        jsObject.getFields(NAME, NEW_BEAN) match {
+      jsObject.getFields(NAME, NEW_BEAN) match {
         case Seq(nameJs, newBeanJs) =>
           val name = nameJs.convertTo[String]
           val newBean = newBeanJs.convertTo[RawBean]
@@ -194,7 +194,7 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
     override def read(json: JsValue): Offer = {
       val jsObject = json.asJsObject
       jsObject.getFields(ID, AGENT_ID, HOSTNAME, MEM, CPU, PORTS) match {
-        case Seq(idJs, agentIdJs, hostnameJs, memJs, cpuJsJs, portsJs) => {
+        case Seq(idJs, agentIdJs, hostnameJs, memJs, cpuJsJs, portsJs) =>
           val id = idJs.convertTo[String]
           val agentId = agentIdJs.convertTo[String]
           val hostname = hostnameJs.convertTo[String]
@@ -206,8 +206,6 @@ trait JsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
           })
 
           Offer(id, agentId, hostname, mem, cpu, ports)
-
-        }
         case other => deserializationError(s"Cannot deserialize Offer: invalid input. Raw input: $other")
       }
     }

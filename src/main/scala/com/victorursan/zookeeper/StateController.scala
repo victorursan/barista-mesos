@@ -58,12 +58,6 @@ object StateController extends JsonSupport with State {
     newOldBeans
   }
 
-  override def oldBeans: Set[Bean] =
-    Try(new String(CuratorService.read(historyAwaitingPath))
-      .parseJson
-      .convertTo[Set[Bean]])
-      .getOrElse(Set())
-
   override def removeOldBean(bean: Bean): Set[Bean] = removeOldBean(Set(bean))
 
   override def removeOldBean(beans: Set[Bean]): Set[Bean] = {
@@ -71,6 +65,12 @@ object StateController extends JsonSupport with State {
     CuratorService.createOrUpdate(historyAwaitingPath, newOldBeans.toJson.toString().getBytes)
     newOldBeans
   }
+
+  override def oldBeans: Set[Bean] =
+    Try(new String(CuratorService.read(historyAwaitingPath))
+      .parseJson
+      .convertTo[Set[Bean]])
+      .getOrElse(Set())
 
   override def addToRunningUnpacked(bean: Bean): Set[Bean] = addToRunningUnpacked(Set(bean))
 
@@ -80,13 +80,13 @@ object StateController extends JsonSupport with State {
     newRunning
   }
 
-  override def runningUnpacked: Set[Bean] =
-    Try(new String(CuratorService.read(runningUnpackedPath))
-      .parseJson
-      .convertTo[Set[Bean]])
-      .getOrElse(Set())
-
   override def removeRunningUnpacked(bean: Bean): Set[Bean] = removeRunningUnpacked(Set(bean))
+
+  override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
+    val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
+    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
+    newRunning
+  }
 
   def removeRunningUnpacked(taskId: String): Set[Bean] = {
     val newRunning = runningUnpacked.filterNot(t => t.taskId.equalsIgnoreCase(taskId))
@@ -94,11 +94,11 @@ object StateController extends JsonSupport with State {
     newRunning
   }
 
-  override def removeRunningUnpacked(beans: Set[Bean]): Set[Bean] = {
-    val newRunning = runningUnpacked.filterNot(t => beans.map(_.taskId).contains(t.taskId))
-    CuratorService.createOrUpdate(runningUnpackedPath, newRunning.toJson.toString().getBytes)
-    newRunning
-  }
+  override def runningUnpacked: Set[Bean] =
+    Try(new String(CuratorService.read(runningUnpackedPath))
+      .parseJson
+      .convertTo[Set[Bean]])
+      .getOrElse(Set())
 
   override def addToAccept(bean: Bean): Set[Bean] = addToAccept(Set(bean))
 
@@ -159,12 +159,6 @@ object StateController extends JsonSupport with State {
     newOffers
   }
 
-  override def availableOffers: Set[Offer] =
-    Try(new String(CuratorService.read(offersPath))
-      .parseJson
-      .convertTo[Set[Offer]])
-      .getOrElse(Set())
-
   override def removeFromOffer(offerId: String): Set[Offer] = removeFromOffer(Set(offerId))
 
   override def removeFromOffer(offersId: Set[String]): Set[Offer] = {
@@ -173,6 +167,11 @@ object StateController extends JsonSupport with State {
     newOffers
   }
 
+  override def availableOffers: Set[Offer] =
+    Try(new String(CuratorService.read(offersPath))
+      .parseJson
+      .convertTo[Set[Offer]])
+      .getOrElse(Set())
 
   override def addToBeanDocker(beanDocker: BeanDocker): Set[BeanDocker] = addToBeanDocker(Set(beanDocker))
 
@@ -207,12 +206,6 @@ object StateController extends JsonSupport with State {
     agentResources
   }
 
-  def roundRobinIndex: Int =
-    Try(new String(CuratorService.read(roundRobinPath))
-      .parseJson
-      .convertTo[Int])
-      .getOrElse(0)
-
   def updateRoundRobinIndex(index: Int): Int = {
     CuratorService.createOrUpdate(roundRobinPath, index.toJson.toString().getBytes(StandardCharsets.UTF_8))
     index
@@ -223,6 +216,12 @@ object StateController extends JsonSupport with State {
     CuratorService.createOrUpdate(roundRobinPath, incrementedValue.toJson.toString().getBytes(StandardCharsets.UTF_8))
     incrementedValue
   }
+
+  def roundRobinIndex: Int =
+    Try(new String(CuratorService.read(roundRobinPath))
+      .parseJson
+      .convertTo[Int])
+      .getOrElse(0)
 
   def setDefragmenting(defragmenting: Boolean): Boolean = {
     CuratorService.createOrUpdate(defragmentingPath, defragmenting.toJson.toString().getBytes(StandardCharsets.UTF_8))

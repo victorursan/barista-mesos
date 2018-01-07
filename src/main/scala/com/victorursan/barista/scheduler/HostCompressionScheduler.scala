@@ -16,7 +16,7 @@ object HostCompressionScheduler extends Scheduler {
 
     val sortedBeans: List[Bean] = beans.toList.sortBy(bean =>
       if (schedulerResource == "mem") bean.dockerEntity.resource.mem else bean.dockerEntity.resource.cpu
-      ).reverse
+    ).reverse
 
     sortedBeans.headOption.foreach(bean =>
       remainingOffers.find(offer => {

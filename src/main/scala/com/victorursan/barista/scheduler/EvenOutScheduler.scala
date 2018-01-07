@@ -26,12 +26,13 @@ object EvenOutScheduler extends Scheduler {
 
             if (offers.nonEmpty) {
               offers.exists(off => {
-                resolveBeanWithHost(bean, off).exists(bbean => {//find  the first offer good enough
+                resolveBeanWithHost(bean, off).exists(bbean => {
+                  //find  the first offer good enough
                   scheduledBeans = scheduledBeans + bbean.taskId //add the bean to be scheduled
                   acceptOffers = acceptOffers + (bbean -> off.id) //the offer is accepted
                   remainingOffers = remainingOffers.filterNot(_.id == off.id)
-                  remainingOffersMap = remainingOffers.groupBy(_.agentId).withDefaultValue(List())//remove the offer from available
-                  runningBeans = runningBeans + (agent -> (runningBeans(agent) + bbean))  // add the bean as a running service
+                  remainingOffersMap = remainingOffers.groupBy(_.agentId).withDefaultValue(List()) //remove the offer from available
+                  runningBeans = runningBeans + (agent -> (runningBeans(agent) + bbean)) // add the bean as a running service
                   true
                 })
               })

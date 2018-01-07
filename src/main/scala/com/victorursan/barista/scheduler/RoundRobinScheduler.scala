@@ -5,7 +5,7 @@ import java.lang.Math.min
 import com.victorursan.state.{Bean, Offer, ScheduleState}
 import com.victorursan.zookeeper.StateController
 
-object RoundRobinScheduler extends Scheduler{
+object RoundRobinScheduler extends Scheduler {
 
   override def schedule(beans: Set[Bean], offers: List[Offer]): ScheduleState = {
     var nextOfferIndex = StateController.roundRobinIndex

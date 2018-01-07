@@ -1,7 +1,6 @@
 package com.victorursan.zookeeper
 
 import com.victorursan.state.{AgentResources, Bean, BeanDocker, Offer}
-import org.apache.mesos.v1.Protos.TaskID
 
 
 /**
@@ -49,6 +48,7 @@ trait State {
   def removeRunningUnpacked(beans: Set[Bean]): Set[Bean]
 
   def addToKill(taskID: String): Set[String]
+
   def addToKill(tasksID: Set[String]): Set[String]
 
   def removeFromKill(taskID: String): Set[String]

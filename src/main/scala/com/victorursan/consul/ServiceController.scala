@@ -25,20 +25,9 @@ object ServiceController {
     consulClient.agentServiceRegister(service)
   }
 
-  private def baristaCheckToCheck(baristaCheck: BaristaCheck): NewService.Check = {
-    val check = new NewService.Check
-    check.setHttp(baristaCheck.httpHealth.toString)
-    check.setInterval(s"${baristaCheck.interval.toString}s")
-    check
-  }
-
-
   def setLoadBalancer(consulClientStr: String, loadBalancing: String): Unit = {
     val consulClient = new ConsulClient(consulClientStr)
-//    consulClient.setKVValue("/balancer", loadBalancing);
-  }
-  private def setLoadBalancer(consulClient: ConsulClient, loadBalancing: String): Unit = {
-//    consulClient.setKVValue("/balancer", loadBalancing);
+    //    consulClient.setKVValue("/balancer", loadBalancing);
   }
 
   def deregisterService(consulClient: ConsulClient, serviceId: String): Unit =
@@ -57,6 +46,13 @@ object ServiceController {
     consulClient.agentServiceRegister(service)
   }
 
+  private def baristaCheckToCheck(baristaCheck: BaristaCheck): NewService.Check = {
+    val check = new NewService.Check
+    check.setHttp(baristaCheck.httpHealth.toString)
+    check.setInterval(s"${baristaCheck.interval.toString}s")
+    check
+  }
+
   def deregisterService(consulClientStr: String, serviceId: String): Unit = {
     val consulClient = new ConsulClient(consulClientStr)
     consulClient.agentServiceDeregister(serviceId)
@@ -67,5 +63,9 @@ object ServiceController {
     Option(consulClient.getHealthChecksForService(serviceName, queryParams).getValue)
       .getOrElse(Collections.emptyList[Check]())
       .asScala
+
+  private def setLoadBalancer(consulClient: ConsulClient, loadBalancing: String): Unit = {
+    //    consulClient.setKVValue("/balancer", loadBalancing);
+  }
 
 }

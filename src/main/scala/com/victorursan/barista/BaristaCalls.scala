@@ -28,7 +28,7 @@ object BaristaCalls extends MesosSchedulerCalls with MesosConf {
   private var frameworkID = FrameworkID.newBuilder
     .setValue(frameworkId)
     .build()
-  private var openStream: AwaitableSubscription = null
+  private var openStream: AwaitableSubscription = _
 
   override def subscribe(): Unit = {
     val clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos

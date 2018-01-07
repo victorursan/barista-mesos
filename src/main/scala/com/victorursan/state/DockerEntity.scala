@@ -8,4 +8,4 @@ case class DockerPort(containerPort: Int, hostPort: Option[Int])
 
 case class DockerResource(cpu: Double, mem: Double, disk: Option[Double], ports: List[DockerPort] = List())
 
-case class DockerEntity(image: String, role: String = "*", network: String = "bridge", resource: DockerResource,  arguments: List[String] = List())
+case class DockerEntity(image: String, role: String = "*", network: String = "bridge", resource: DockerResource, arguments: List[String] = List())

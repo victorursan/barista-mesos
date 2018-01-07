@@ -180,18 +180,6 @@ class BaristaController extends JsonSupport with MesosConf {
     StateController.setDefragmenting(false)
   }
 
-  private def waitRunning(bean: Bean): Try[Bean] = {
-    for (_ <- 1 to drainTimeout) {
-      Thread.sleep(1000)
-      val running = StateController.runningUnpacked
-      running.find(_.taskId == bean.taskId)
-        .foreach(bbbbean => {
-          return Success(bbbbean)
-        })
-    }
-    Failure(new Throwable("a"))
-  }
-
   def upgrade(upgrade: UpgradeBean): Set[Bean] = {
     StateController.runningUnpacked.filter(bean => bean.name == upgrade.name && bean.pack == upgrade.pack)
       .flatMap(oldBean => {
@@ -208,6 +196,18 @@ class BaristaController extends JsonSupport with MesosConf {
           case _ => None
         }
       })
+  }
+
+  private def waitRunning(bean: Bean): Try[Bean] = {
+    for (_ <- 1 to drainTimeout) {
+      Thread.sleep(1000)
+      val running = StateController.runningUnpacked
+      running.find(_.taskId == bean.taskId)
+        .foreach(bbbbean => {
+          return Success(bbbbean)
+        })
+    }
+    Failure(new Throwable("a"))
   }
 
 }

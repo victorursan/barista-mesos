@@ -16,13 +16,6 @@ import scala.language.postfixOps
   * Created by victor on 4/2/17.
   */
 trait BaristaService extends BaseService {
-  protected val serviceName = "BaristaService"
-  private val log = LoggerFactory.getLogger(classOf[BaristaService])
-  private val baristaController: BaristaController = new BaristaController
-  Future {
-    baristaController.start()
-  }
-
   val routes: Route =
     path("status") {
       get {
@@ -51,14 +44,14 @@ trait BaristaService extends BaseService {
               complete(baristaController.scaleBean(scaleBean))
             }
           } ~ path("upgrade") {
-//            post {
-              log.info("[POST] /api/task/bean/upgrade upgrade a ")
-              entity(as[UpgradeBean]) { upgradeBean =>
-                print(upgradeBean)
-                                complete(baristaController.upgrade(upgradeBean))
-//                complete("a")
-              }
-//            }
+            //            post {
+            log.info("[POST] /api/task/bean/upgrade upgrade a ")
+            entity(as[UpgradeBean]) { upgradeBean =>
+              print(upgradeBean)
+              complete(baristaController.upgrade(upgradeBean))
+              //                complete("a")
+            }
+            //            }
           }
         } ~ path("pack" / "add") {
           log.info("[POST] /api/task/pack/add launching a new pack")
@@ -71,9 +64,9 @@ trait BaristaService extends BaseService {
             entity(as[Set[String]]) { tasksId =>
               complete(baristaController.killTask(tasksId))
             } ~
-            entity(as[String]) { tasksId =>
-              complete(baristaController.killTask(Set(tasksId)))
-            }
+              entity(as[String]) { tasksId =>
+                complete(baristaController.killTask(Set(tasksId)))
+              }
           }
         } ~ path("running" / "unpacked") {
           get {
@@ -107,4 +100,10 @@ trait BaristaService extends BaseService {
         }
       }
     }
+  protected val serviceName = "BaristaService"
+  private val log = LoggerFactory.getLogger(classOf[BaristaService])
+  Future {
+    baristaController.start()
+  }
+  private val baristaController: BaristaController = new BaristaController
 }

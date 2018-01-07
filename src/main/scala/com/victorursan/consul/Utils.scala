@@ -2,7 +2,7 @@ package com.victorursan.consul
 
 import java.net.URL
 
-import com.victorursan.state.{Bean, DockerPort, Offer}
+import com.victorursan.state.{Bean, Offer}
 import org.apache.mesos.v1.Protos
 
 import scala.collection.JavaConverters._
